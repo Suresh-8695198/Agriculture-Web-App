@@ -3,11 +3,40 @@ from django.conf import settings
 
 class SupplierProfile(models.Model):
     """Extended profile for suppliers"""
+    BUSINESS_TYPE_CHOICES = (
+        ('seeds', 'Seeds'),
+        ('fertilizer', 'Fertilizer'),
+        ('manure', 'Manure'),
+        ('equipment_rental', 'Equipment Rental'),
+    )
+    
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='supplier_profile')
+    
+    # Basic Details
+    shop_name = models.CharField(max_length=200, blank=True)
+    owner_name = models.CharField(max_length=200, blank=True)
+    alternate_number = models.CharField(max_length=15, blank=True)
     business_name = models.CharField(max_length=200)
     business_license = models.CharField(max_length=100, blank=True)
+    license_number = models.CharField(max_length=100, blank=True)
     gst_number = models.CharField(max_length=15, blank=True)
     description = models.TextField(blank=True)
+    
+    # Address Details
+    village = models.CharField(max_length=100, blank=True)
+    district = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    pin_code = models.CharField(max_length=6, blank=True)
+    
+    # Business Type - stored as comma-separated values
+    business_types = models.CharField(max_length=200, blank=True, help_text="Comma-separated: seeds,fertilizer,manure,equipment_rental")
+    
+    # Documents
+    id_proof = models.FileField(upload_to='supplier_documents/id_proofs/', null=True, blank=True)
+    business_license_doc = models.FileField(upload_to='supplier_documents/licenses/', null=True, blank=True)
+    shop_image = models.ImageField(upload_to='supplier_documents/shop_images/', null=True, blank=True)
+    
+    # Ratings
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
     total_reviews = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)

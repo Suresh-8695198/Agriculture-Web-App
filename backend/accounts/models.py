@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import RegexValidator
 
 class User(AbstractUser):
     """Custom user model for AgriConnect platform"""
@@ -8,6 +9,21 @@ class User(AbstractUser):
         ('farmer', 'Farmer'),
         ('supplier', 'Supplier'),
         ('consumer', 'Consumer'),
+    )
+    
+    # Override username to allow spaces and more characters
+    username_validator = RegexValidator(
+        regex=r'^[\w\s.@+-]+$',
+        message='Username can contain letters, numbers, spaces, and @/./+/-/_ characters.',
+    )
+    
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[username_validator],
+        error_messages={
+            'unique': "A user with that username already exists.",
+        },
     )
     
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES)

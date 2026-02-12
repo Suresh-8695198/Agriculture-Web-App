@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'phone_number', 'user_type', 
-                  'first_name', 'last_name', 'profile_picture', 'address', 
+                  'profile_picture', 'address', 
                   'latitude', 'longitude', 'is_verified', 'created_at']
         read_only_fields = ['id', 'created_at', 'is_verified']
 
@@ -23,7 +23,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'phone_number', 'password', 'password2', 
-                  'user_type', 'first_name', 'last_name', 'address', 
+                  'user_type', 'address', 
                   'latitude', 'longitude']
     
     def validate(self, attrs):
@@ -39,8 +39,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserLoginSerializer(serializers.Serializer):
     """Serializer for user login"""
-    username = serializers.CharField()
+    username = serializers.CharField(help_text="Username or Email")
     password = serializers.CharField(write_only=True)
+    role = serializers.CharField(required=False, help_text="Expected user role (farmer/supplier/consumer)")
 
 
 class ChangePasswordSerializer(serializers.Serializer):

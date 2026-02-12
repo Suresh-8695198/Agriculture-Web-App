@@ -28,6 +28,14 @@ class UserRegistrationView(generics.CreateAPIView):
                 serializer.is_valid(raise_exception=True)
                 user = serializer.save()
                 
+                # Create supplier profile if user is a supplier
+                if user.user_type == 'supplier':
+                    from suppliers.models import SupplierProfile
+                    SupplierProfile.objects.create(
+                        user=user,
+                        business_name=f"{user.username}'s Business"
+                    )
+                
                 # Generate JWT tokens
                 refresh = RefreshToken.for_user(user)
                 
@@ -61,12 +69,31 @@ class UserLoginView(APIView):
         serializer = UserLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        user = authenticate(
-            username=serializer.validated_data['username'],
-            password=serializer.validated_data['password']
-        )
+        username_or_email = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+        expected_role = serializer.validated_data.get('role', None)
+        
+        # Try to find user by username or email
+        user = None
+        try:
+            # Try username first
+            user_obj = User.objects.get(username=username_or_email)
+            user = authenticate(username=user_obj.username, password=password)
+        except User.DoesNotExist:
+            # Try email
+            try:
+                user_obj = User.objects.get(email=username_or_email)
+                user = authenticate(username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                pass
         
         if user:
+            # Validate role if specified
+            if expected_role and user.user_type != expected_role:
+                return Response({
+                    'error': f'Invalid credentials for {expected_role} portal. Please use the correct portal or sign up first.'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            
             refresh = RefreshToken.for_user(user)
             return Response({
                 'user': UserSerializer(user).data,
@@ -76,7 +103,7 @@ class UserLoginView(APIView):
             })
         
         return Response({
-            'error': 'Invalid credentials'
+            'error': 'Invalid credentials. Please check your username/email and password.'
         }, status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -114,17 +141,16 @@ class ChangePasswordView(APIView):
 
 class LogoutView(APIView):
     """API endpoint for user logout"""
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
     
     def post(self, request):
         try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            # Simply return success - client will clear tokens
+            # Token blacklisting can be added later if needed
             return Response({
                 'message': 'Logout successful'
-            })
+            }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({
-                'error': 'Invalid token'
-            }, status=status.HTTP_400_BAD_REQUEST)
+                'message': 'Logout successful'
+            }, status=status.HTTP_200_OK)

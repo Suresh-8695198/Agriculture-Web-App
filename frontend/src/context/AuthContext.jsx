@@ -26,9 +26,12 @@ export const AuthProvider = ({ children }) => {
         checkLoggedIn();
     }, []);
 
-    const login = async (username, password) => {
+    const login = async (username, password, role = null) => {
         try {
-            const response = await api.post('accounts/login/', { username, password });
+            const payload = { username, password };
+            if (role) payload.role = role;
+            
+            const response = await api.post('accounts/login/', payload);
             localStorage.setItem('access_token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
             setUser(response.data.user);
@@ -66,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, setUser, login, register, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

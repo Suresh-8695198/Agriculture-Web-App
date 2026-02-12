@@ -34,7 +34,7 @@ const Dashboard = () => {
     return (
         <div className="dashboard-container container animate-fade-in">
             <header className="dashboard-header glass">
-                <h1>Welcome, {user?.first_name || user?.username}!</h1>
+                <h1>Welcome, {user?.username}!</h1>
                 <p className="role-badge">{user?.user_type.toUpperCase()}</p>
             </header>
 
@@ -44,7 +44,8 @@ const Dashboard = () => {
                     <h3>Your Profile</h3>
                     {profile ? (
                         <div>
-                            <p><strong>Name:</strong> {user.first_name} {user.last_name}</p>
+                            <p><strong>Username:</strong> {user.username}</p>
+                            <p><strong>Email:</strong> {user.email}</p>
                             <p><strong>Phone:</strong> {user.phone_number}</p>
                             <p><strong>Address:</strong> {user.address}</p>
                             {/* Role specific fields */}

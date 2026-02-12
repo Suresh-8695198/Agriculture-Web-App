@@ -1,190 +1,318 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import './Login.css'; // Reusing Login styles
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaMapMarkerAlt, FaExclamationTriangle, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import './Auth.css';
 
 const Register = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const queryParams = new URLSearchParams(location.search);
-    const initialRole = queryParams.get('role') || 'farmer';
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialRole = queryParams.get('role') || 'farmer';
 
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: '',
-        password2: '',
-        user_type: initialRole,
-        phone_number: '',
-        first_name: '',
-        last_name: '',
-        address: '',
-        latitude: null,
-        longitude: null
-    });
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    password2: '',
+    user_type: initialRole,
+    phone_number: '',
+    address: '',
+    latitude: null,
+    longitude: null,
+  });
 
-    const [error, setError] = useState('');
-    const { register } = useAuth();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const { register } = useAuth();
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-    const handleLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = parseFloat(position.coords.latitude).toFixed(6);
-                    const lng = parseFloat(position.coords.longitude).toFixed(6);
-                    setFormData(prev => ({
-                        ...prev,
-                        latitude: lat,
-                        longitude: lng
-                    }));
-                    alert(`Location detected: ${lat}, ${lng}`);
-                },
-                (error) => {
-                    alert("Error detecting location: " + error.message);
-                }
-            );
+  const handleLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = parseFloat(position.coords.latitude).toFixed(6);
+          const lng = parseFloat(position.coords.longitude).toFixed(6);
+          setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+          toast.success(`Location detected: ${lat}, ${lng}`);
+        },
+        (err) => toast.error('Error detecting location: ' + err.message)
+      );
+    } else {
+      toast.error('Geolocation is not supported by this browser.');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.password !== formData.password2) {
+      const msg = 'Passwords do not match.';
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (formData.password.length < 8) {
+      const msg = 'Password must be at least 8 characters long.';
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (/^\d+$/.test(formData.password)) {
+      const msg = 'Password cannot be entirely numeric.';
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await register(formData);
+      toast.success('Registration successful! Welcome to AgriConnect.');
+      navigate('/');
+    } catch (err) {
+      console.error('Registration Error:', err);
+      let errorMessage = 'Registration failed.';
+      if (err.response?.data) {
+        const data = err.response.data;
+        if (typeof data === 'object') {
+          errorMessage = Object.keys(data)
+            .map((key) => {
+              const msg = Array.isArray(data[key]) ? data[key].join(' ') : data[key];
+              return `${key}: ${msg}`;
+            })
+            .join(' | ');
         } else {
-            alert("Geolocation is not supported by this browser.");
+          errorMessage = data;
         }
-    };
+      }
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
+  const ROLE_META = {
+    farmer:   { icon: <FaUser />, label: 'Farmer',   color: 'farmer' },
+    supplier: { icon: <FaUser />, label: 'Supplier', color: 'supplier' },
+    consumer: { icon: <FaUser />, label: 'Consumer', color: 'consumer' },
+  };
+  const meta = ROLE_META[formData.user_type] || ROLE_META.farmer;
 
-        // Basic Validations
-        const usernameRegex = /^[\w.@+-]+$/;
-        if (!usernameRegex.test(formData.username)) {
-            setError("Username can only contain letters, numbers, and @/./+/-/_ characters.");
-            return;
-        }
-
-        if (formData.password !== formData.password2) {
-            setError("Passwords do not match");
-            return;
-        }
-
-        if (formData.password.length < 8) {
-            setError("Password must be at least 8 characters long.");
-            return;
-        }
-
-        if (/^\d+$/.test(formData.password)) {
-            setError("Password cannot be entirely numeric.");
-            return;
-        }
-
-        try {
-            await register(formData);
-            navigate('/');
-        } catch (err) {
-            console.error("Registration Error:", err);
-            // Extract detailed error message from DRF response
-            let errorMessage = "Registration failed.";
-            if (err.response && err.response.data) {
-                const data = err.response.data;
-                if (typeof data === 'object') {
-                    // Combine all error messages
-                    errorMessage = Object.keys(data).map(key => {
-                        const msg = Array.isArray(data[key]) ? data[key].join(' ') : data[key];
-                        return `${key}: ${msg}`;
-                    }).join(' | ');
-                } else {
-                    errorMessage = data;
-                }
-            }
-            setError(errorMessage);
-        }
-    };
-
-    return (
-        <div className="auth-container">
-            <div className="auth-card glass animate-fade-in" style={{ maxWidth: '600px' }}>
-                <h2 className="auth-title">Create Account</h2>
-                <p className="auth-subtitle">Join the AgriConnect Community</p>
-
-                {error && <div className="error-message" style={{ color: 'red', marginBottom: '1rem', padding: '10px', background: 'rgba(255,0,0,0.1)', borderRadius: '4px' }}>{error}</div>}
-
-                <form onSubmit={handleSubmit} className="auth-form">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="form-group">
-                            <label className="form-label">First Name</label>
-                            <input name="first_name" type="text" className="form-control" onChange={handleChange} required />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Last Name</label>
-                            <input name="last_name" type="text" className="form-control" onChange={handleChange} required />
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Username</label>
-                        <input
-                            name="username"
-                            type="text"
-                            className="form-control"
-                            onChange={handleChange}
-                            required
-                            pattern="[\w.@+-]+"
-                            title="Letters, numbers and @/./+/-/_ characters only"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Email</label>
-                        <input name="email" type="email" className="form-control" onChange={handleChange} required />
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Phone Number</label>
-                        <input name="phone_number" type="tel" className="form-control" onChange={handleChange} required />
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">I am a...</label>
-                        <select name="user_type" className="form-control" value={formData.user_type} onChange={handleChange}>
-                            <option value="farmer">Farmer</option>
-                            <option value="supplier">Supplier</option>
-                            <option value="consumer">Consumer</option>
-                        </select>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Address</label>
-                        <textarea name="address" className="form-control" rows="2" onChange={handleChange} placeholder="Enter full address"></textarea>
-                    </div>
-
-                    <div className="form-group">
-                        <button type="button" className="btn btn-secondary" onClick={handleLocation} style={{ width: '100%', marginBottom: '1rem' }}>
-                            📍 Detect My Location {formData.latitude && '✅'}
-                        </button>
-                        {formData.latitude && <p className="text-sm text-gray-500">Lat: {formData.latitude}, Lng: {formData.longitude}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="form-group">
-                            <label className="form-label">Password</label>
-                            <input name="password" type="password" className="form-control" onChange={handleChange} required minLength="8" />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Confirm Password</label>
-                            <input name="password2" type="password" className="form-control" onChange={handleChange} required />
-                        </div>
-                    </div>
-
-                    <button type="submit" className="auth-btn">Register</button>
-
-                    <div className="auth-footer" style={{ marginTop: '1rem', textAlign: 'center' }}>
-                        <p>Already have an account? <a href="/login" style={{ color: 'var(--primary-color)' }}>Login</a></p>
-                    </div>
-                </form>
+  return (
+    <div className="auth-page">
+      {/* ─── Left decorative panel ─── */}
+      <div className="auth-left">
+        <div className="auth-left-content">
+          <img src="/logofarmer.png" alt="AgriConnect" className="auth-left-logo" />
+          <h2 className="auth-left-title">Join AgriConnect</h2>
+          <p className="auth-left-subtitle">
+            Be part of the agricultural revolution. Connect, grow, and thrive with our community.
+          </p>
+          <div className="auth-left-features">
+            <div className="auth-feature-item">
+              <span className="auth-feature-icon">
+                <FaUser />
+              </span>
+              10,000+ farmers on the platform
             </div>
+            <div className="auth-feature-item">
+              <span className="auth-feature-icon">
+                <FaUser />
+              </span>
+              Verified suppliers & consumers
+            </div>
+            <div className="auth-feature-item">
+              <span className="auth-feature-icon">
+                <FaLock />
+              </span>
+              Secure and encrypted data
+            </div>
+          </div>
         </div>
-    );
+      </div>
+
+      {/* ─── Right form panel ─── */}
+      <div className="auth-right">
+        <div className="auth-right-inner" style={{ maxWidth: '500px' }}>
+          <Link to="/" className="auth-back-link">
+            ← Back to home
+          </Link>
+
+          <div className={`auth-role-badge ${meta.color}`}>
+            {meta.icon} {meta.label} Registration
+          </div>
+
+          <h1 className="auth-heading">Create Account</h1>
+          <p className="auth-subheading">
+            Already have an account?{' '}
+            <Link to={`/login${initialRole !== 'farmer' ? `?role=${initialRole}` : ''}`}>
+              Sign in
+            </Link>
+          </p>
+
+          {error && (
+            <div className="auth-error">
+              <span className="auth-error-icon"><FaExclamationTriangle /></span>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            {/* Username */}
+            <div className="auth-field">
+              <label className="auth-label">Username</label>
+              <div className="auth-input-wrapper">
+                <input
+                  name="username"
+                  type="text"
+                  className="auth-input"
+                  onChange={handleChange}
+                  required
+                  placeholder="Choose a username"
+                />
+                <span className="auth-input-icon"><FaUser /></span>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="auth-field">
+              <label className="auth-label">Email</label>
+              <div className="auth-input-wrapper">
+                <input
+                  name="email"
+                  type="email"
+                  className="auth-input"
+                  onChange={handleChange}
+                  required
+                  placeholder="john@example.com"
+                />
+                <span className="auth-input-icon"><FaEnvelope /></span>
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="auth-field">
+              <label className="auth-label">Phone Number</label>
+              <div className="auth-input-wrapper">
+                <input
+                  name="phone_number"
+                  type="tel"
+                  className="auth-input"
+                  onChange={handleChange}
+                  required
+                  placeholder="+91 98765 43210"
+                />
+                <span className="auth-input-icon"><FaPhone /></span>
+              </div>
+            </div>
+
+            {/* Role */}
+            <div className="auth-field">
+              <label className="auth-label">I am a...</label>
+              <select
+                name="user_type"
+                className="auth-select"
+                value={formData.user_type}
+                onChange={handleChange}
+              >
+                <option value="farmer">Farmer</option>
+                <option value="supplier">Supplier</option>
+                <option value="consumer">Consumer</option>
+              </select>
+            </div>
+
+            {/* Address */}
+            <div className="auth-field">
+              <label className="auth-label">Address</label>
+              <textarea
+                name="address"
+                className="auth-textarea"
+                rows="2"
+                onChange={handleChange}
+                placeholder="Enter your full address"
+              />
+            </div>
+
+            {/* Location */}
+            <div className="auth-field">
+              <button
+                type="button"
+                className={`auth-location-btn ${formData.latitude ? 'detected' : ''}`}
+                onClick={handleLocation}
+              >
+                <FaMapMarkerAlt /> {formData.latitude ? 'Location Detected ✓' : 'Detect My Location'}
+              </button>
+              {formData.latitude && (
+                <p className="auth-location-text">
+                  Lat: {formData.latitude}, Lng: {formData.longitude}
+                </p>
+              )}
+            </div>
+
+            {/* Passwords */}
+            <div className="auth-form-row">
+              <div className="auth-field">
+                <label className="auth-label">Password</label>
+                <div className="auth-input-wrapper">
+                  <input
+                    name="password"
+                    type={showPwd ? 'text' : 'password'}
+                    className="auth-input"
+                    onChange={handleChange}
+                    required
+                    minLength="8"
+                    placeholder="Min 8 characters"
+                  />
+                  <span className="auth-input-icon"><FaLock /></span>
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPwd(!showPwd)}
+                    tabIndex={-1}
+                  >
+                    {showPwd ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+              <div className="auth-field">
+                <label className="auth-label">Confirm Password</label>
+                <div className="auth-input-wrapper">
+                  <input
+                    name="password2"
+                    type={showPwd ? 'text' : 'password'}
+                    className="auth-input"
+                    onChange={handleChange}
+                    required
+                    placeholder="Re-enter password"
+                  />
+                  <span className="auth-input-icon"><FaLock /></span>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" className="auth-submit" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </button>
+          </form>
+
+          <p className="auth-footer-text">
+            Already have an account?{' '}
+            <Link to={`/login${initialRole !== 'farmer' ? `?role=${initialRole}` : ''}`}>
+              Sign In
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Register;

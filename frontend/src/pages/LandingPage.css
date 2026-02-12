@@ -1,0 +1,432 @@
+/* ═══════════════════════════════════════════════════════════
+   AGRICONNECT — Premium Landing Page
+   ═══════════════════════════════════════════════════════════ */
+
+.landing-page {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f8faf8 0%, #f0f7f0 30%, #faf8f5 70%, #f5f0eb 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Subtle background decoration */
+.landing-page::before {
+  content: '';
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.04) 0%, transparent 70%);
+  top: -300px;
+  right: -200px;
+  pointer-events: none;
+}
+
+.landing-page::after {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200, 149, 108, 0.04) 0%, transparent 70%);
+  bottom: -200px;
+  left: -200px;
+  pointer-events: none;
+}
+
+/* ─── Navigation Bar ─── */
+.landing-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 3rem;
+  position: relative;
+  z-index: 10;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.landing-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.landing-nav-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 12px rgba(76, 175, 80, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.landing-nav-brand:hover .landing-nav-logo {
+  transform: rotate(10deg) scale(1.05);
+}
+
+.landing-nav-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #2D5016;
+}
+
+.landing-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.landing-nav-link {
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.landing-nav-link.ghost {
+  background: transparent;
+  color: #374151;
+}
+
+.landing-nav-link.ghost:hover {
+  background: rgba(46, 125, 50, 0.08);
+  color: #2E7D32;
+}
+
+.landing-nav-link.filled {
+  background: #2D5016;
+  color: white;
+  box-shadow: 0 2px 8px rgba(45, 80, 22, 0.25);
+}
+
+.landing-nav-link.filled:hover {
+  background: #5C8A3D;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
+}
+
+/* ─── Hero Section ─── */
+.landing-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 2rem 3rem;
+  text-align: center;
+  position: relative;
+  z-index: 5;
+}
+
+.landing-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 100px;
+  background: rgba(92, 138, 61, 0.08);
+  border: 1px solid rgba(92, 138, 61, 0.2);
+  color: #2D5016;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.landing-hero-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5C8A3D;
+  animation: dotBlink 2s ease-in-out infinite;
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.landing-hero-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #111827;
+  max-width: 700px;
+  margin-bottom: 1.2rem;
+  letter-spacing: -0.03em;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.landing-hero-title .text-gradient {
+  color: #2D5016;
+}
+
+.landing-hero-title .text-green {
+  color: #2D5016;
+}
+
+.landing-hero-subtitle {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: #6B7280;
+  max-width: 520px;
+  margin-bottom: 3rem;
+  animation: fadeInUp 0.6s ease-out 0.35s both;
+}
+
+/* ─── Role Cards ─── */
+.landing-roles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 920px;
+  width: 100%;
+  padding: 0 1rem;
+  animation: fadeInUp 0.7s ease-out 0.5s both;
+}
+
+.role-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 2.25rem 1.75rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+}
+
+.role-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 20px 20px 0 0;
+  transition: height 0.3s ease;
+}
+
+.role-card.farmer::before {
+  background: #2D5016;
+}
+
+.role-card.supplier::before {
+  background: #8B6F47;
+}
+
+.role-card.consumer::before {
+  background: #5C8A3D;
+}
+
+.role-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08),
+              0 8px 16px rgba(0, 0, 0, 0.04);
+  border-color: transparent;
+}
+
+.role-card:hover::before {
+  height: 5px;
+}
+
+.role-card:active {
+  transform: translateY(-4px);
+}
+
+/* Icon circle */
+.role-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  font-size: 2rem;
+  transition: transform 0.3s ease;
+}
+
+.role-card:hover .role-icon {
+  transform: scale(1.1);
+}
+
+.role-card.farmer .role-icon {
+  background: #F0F4ED;
+  color: #2D5016;
+  box-shadow: 0 2px 8px rgba(45, 80, 22, 0.12);
+}
+
+.role-card.supplier .role-icon { 
+  background: #FAF6F1;
+  color: #8B6F47;
+  box-shadow: 0 2px 8px rgba(139, 111, 71, 0.12);
+}
+
+.role-card.consumer .role-icon {
+  background: #F7FAF3;
+  color: #5C8A3D;
+  box-shadow: 0 2px 8px rgba(92, 138, 61, 0.12);
+}
+
+.role-card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 0.5rem;
+}
+
+.role-card-desc {
+  font-size: 0.85rem;
+  color: #6B7280;
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+}
+
+.role-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.6rem 1.4rem;
+  border-radius: 12px;
+  transition: all 0.25s ease;
+}
+
+.role-card.farmer .role-card-action {
+  color: #2D5016;
+  background: rgba(45, 80, 22, 0.08);
+}
+
+.role-card.farmer:hover .role-card-action {
+  background: #2D5016;
+  color: white;
+  box-shadow: 0 2px 8px rgba(45, 80, 22, 0.25);
+}
+
+.role-card.supplier .role-card-action {
+  color: #8B6F47;
+  background: rgba(139, 111, 71, 0.08);
+}
+
+.role-card.supplier:hover .role-card-action {
+  background: #8B6F47;
+  color: white;
+  box-shadow: 0 2px 8px rgba(139, 111, 71, 0.25);
+}
+
+.role-card.consumer .role-card-action {
+  color: #5C8A3D;
+  background: rgba(92, 138, 61, 0.08);
+}
+
+.role-card.consumer:hover .role-card-action {
+  background: #5C8A3D;
+  color: white;
+  box-shadow: 0 2px 8px rgba(92, 138, 61, 0.25);
+}
+
+.role-arrow {
+  transition: transform 0.25s ease;
+  font-size: 1rem;
+}
+
+.role-card:hover .role-arrow {
+  transform: translateX(3px);
+}
+
+/* ─── Footer ─── */
+.landing-footer {
+  text-align: center;
+  padding: 1.5rem 2rem 2rem;
+  color: #9CA3AF;
+  font-size: 0.8rem;
+  position: relative;
+  z-index: 5;
+  animation: fadeInUp 0.6s ease-out 0.7s both;
+}
+
+.landing-footer a {
+  color: #6B7280;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.landing-footer a:hover {
+  color: #2D5016;
+}
+
+/* ─── Animations ─── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .landing-nav {
+    padding: 1rem 1.5rem;
+  }
+
+  .landing-hero-title {
+    font-size: 2.2rem;
+  }
+
+  .landing-hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .landing-roles {
+    grid-template-columns: 1fr;
+    max-width: 380px;
+    gap: 1rem;
+  }
+
+  .role-card {
+    padding: 1.75rem 1.5rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-nav {
+    padding: 0.75rem 1rem;
+  }
+
+  .landing-nav-title {
+    font-size: 1.1rem;
+  }
+
+  .landing-hero-title {
+    font-size: 1.8rem;
+  }
+
+  .landing-nav-links {
+    gap: 0.25rem;
+  }
+
+  .landing-nav-link {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}

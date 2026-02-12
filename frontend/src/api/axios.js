@@ -30,17 +30,26 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        if (error.response.status === 401 && error.response.statusText === "Unauthorized") {
+        // Don't intercept errors from login, register, or token endpoints
+        const isAuthEndpoint = originalRequest.url?.includes('login') || 
+                              originalRequest.url?.includes('register') ||
+                              originalRequest.url?.includes('token/');
+        
+        if (isAuthEndpoint) {
+            return Promise.reject(error);
+        }
+
+        if (error.response?.status === 401 && error.response.statusText === "Unauthorized") {
             const refreshToken = localStorage.getItem('refresh_token');
 
             if (refreshToken) {
-                const tokenParts = JSON.parse(atob(refreshToken.split('.')[1]));
+                try {
+                    const tokenParts = JSON.parse(atob(refreshToken.split('.')[1]));
 
-                // exp date in token is expressed in seconds, while now() returns milliseconds:
-                const now = Math.ceil(Date.now() / 1000);
+                    // exp date in token is expressed in seconds, while now() returns milliseconds:
+                    const now = Math.ceil(Date.now() / 1000);
 
-                if (tokenParts.exp > now) {
-                    try {
+                    if (tokenParts.exp > now) {
                         const response = await axios.post(baseURL + 'token/refresh/', { refresh: refreshToken });
                         
                         localStorage.setItem('access_token', response.data.access);
@@ -50,17 +59,24 @@ api.interceptors.response.use(
                         originalRequest.headers['Authorization'] = "Bearer " + response.data.access;
             
                         return api(originalRequest);
-                    } catch (err) {
-                        console.log("Refresh token is expired", err);
+                    } else {
+                        console.log("Refresh token is expired", tokenParts.exp, now);
+                        localStorage.removeItem('access_token');
+                        localStorage.removeItem('refresh_token');
                         window.location.href = '/login';
                     }
-                } else {
-                    console.log("Refresh token is expired", tokenParts.exp, now);
+                } catch (err) {
+                    console.log("Refresh token is expired or invalid", err);
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
                     window.location.href = '/login';
                 }
             } else {
                 console.log("Refresh token not available.");
-                window.location.href = '/login';
+                // Don't redirect if already on login page
+                if (!window.location.pathname.includes('login')) {
+                    window.location.href = '/login';
+                }
             }
         }
       

@@ -2,10 +2,18 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.db.models import Q
+from django.db.models import Q, Sum, Count
+from django.utils import timezone
+from datetime import timedelta
 from math import radians, cos, sin, asin, sqrt
 from .models import SupplierProfile, Product, SupplierReview
-from .serializers import SupplierProfileSerializer, ProductSerializer, SupplierReviewSerializer
+from .serializers import (
+    SupplierProfileSerializer, 
+    SupplierProfileUpdateSerializer,
+    SupplierDashboardSerializer,
+    ProductSerializer, 
+    SupplierReviewSerializer
+)
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -28,7 +36,7 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
     search_fields = ['business_name', 'description']
     ordering_fields = ['rating', 'created_at']
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='my_profile')
     def my_profile(self, request):
         """Get current supplier's profile"""
         try:
@@ -48,6 +56,60 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['patch', 'put'], url_path='update_profile')
+    def update_profile(self, request):
+        """Update current supplier's profile"""
+        try:
+            profile = SupplierProfile.objects.get(user=request.user)
+            serializer = SupplierProfileUpdateSerializer(profile, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            
+            # Return full profile data
+            full_serializer = SupplierProfileSerializer(profile)
+            return Response(full_serializer.data)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=False, methods=['get'], url_path='dashboard_stats')
+    def dashboard_stats(self, request):
+        """Get dashboard statistics for current supplier"""
+        try:
+            profile = SupplierProfile.objects.get(user=request.user)
+            products = Product.objects.filter(supplier=profile)
+            
+            # Calculate stats
+            total_products = products.count()
+            available_stock = products.filter(is_available=True).aggregate(
+                total=Sum('stock_quantity')
+            )['total'] or 0
+            
+            # For now, these are placeholder values since we don't have Order model yet
+            active_orders = 0
+            active_rentals = 0
+            today_earnings = 0
+            pending_requests = 0
+            total_earnings = 0
+            
+            # Low stock alert (< 10 units)
+            low_stock_count = products.filter(stock_quantity__lt=10, is_available=True).count()
+            
+            stats = {
+                'total_products': total_products,
+                'available_stock': available_stock,
+                'active_orders': active_orders,
+                'active_rentals': active_rentals,
+                'today_earnings': today_earnings,
+                'pending_requests': pending_requests,
+                'low_stock_count': low_stock_count,
+                'total_earnings': total_earnings
+            }
+            
+            serializer = SupplierDashboardSerializer(stats)
+            return Response(serializer.data)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class ProductViewSet(viewsets.ModelViewSet):

@@ -1,51 +1,78 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Home.css';
 
 const Home = () => {
-    return (
-        <div className="home-page animate-fade-in">
-            {/* Hero Section */}
-            <header className="hero-section">
-                <div className="container hero-content">
-                    <h1 className="hero-title">
-                        Connecting <span className="highlight">Farmers</span>, <span className="highlight-secondary">Suppliers</span>, and <span className="highlight-accent">Consumers</span>
-                    </h1>
-                    <p className="hero-subtitle">
-                        A complete ecosystem for modern agriculture. Find supplies, sell produce, and deliver fresh food directly to homes.
-                    </p>
-                    <div className="hero-actions">
-                        <Link to="/register" className="btn btn-primary btn-lg">Get Started</Link>
-                        <Link to="/login" className="btn btn-secondary btn-lg">Login</Link>
-                    </div>
-                </div>
-            </header>
+  const { user } = useAuth();
 
-            {/* Features Section */}
-            <section className="features-section container">
-                <div className="feature-card glass">
-                    <div className="icon-wrapper farmer-bg">🌾</div>
-                    <h3>For Farmers</h3>
-                    <p>Access quality seeds, fertilizers, and equipment. Sell your harvest directly to consumers at fair prices.</p>
-                    <Link to="/register?role=farmer" className="feature-link">Join as Farmer &rarr;</Link>
-                </div>
+  return (
+    <div className="home-page">
+      {/* Hero Section */}
+      <header className="home-hero">
+        <div className="container">
+          <div className="home-hero-badge">
+            <span className="home-hero-badge-dot" />
+            Welcome to AgriConnect
+          </div>
 
-                <div className="feature-card glass">
-                    <div className="icon-wrapper supplier-bg">🚜</div>
-                    <h3>For Suppliers</h3>
-                    <p>Expand your business reach. Connect with local farmers and supply essential agricultural inputs.</p>
-                    <Link to="/register?role=supplier" className="feature-link">Join as Supplier &rarr;</Link>
-                </div>
+          <h1 className="home-hero-title">
+            Connecting{' '}
+            <span className="text-green">Farmers</span>,{' '}
+            <span className="text-orange">Suppliers</span> &amp;{' '}
+            <span className="text-blue">Consumers</span>
+          </h1>
 
-                <div className="feature-card glass">
-                    <div className="icon-wrapper consumer-bg">🥗</div>
-                    <h3>For Consumers</h3>
-                    <p>Buy fresh, organic produce directly from the source. Support local farmers and eat healthy.</p>
-                    <Link to="/register?role=consumer" className="feature-link">Shop Fresh &rarr;</Link>
-                </div>
-            </section>
+          <p className="home-hero-subtitle">
+            A complete ecosystem for modern agriculture. Find supplies, sell produce, and deliver fresh food directly to homes.
+          </p>
+
+          {!user && (
+            <div className="home-hero-actions">
+              <Link to="/register" className="home-btn-primary">Get Started</Link>
+              <Link to="/login" className="home-btn-outline">Sign In</Link>
+            </div>
+          )}
         </div>
-    );
+      </header>
+
+      {/* Features Section */}
+      <section className="home-features container">
+        <div className="home-feature-card">
+          <div className="home-feature-icon green-bg">🌾</div>
+          <h3 className="home-feature-title">For Farmers</h3>
+          <p className="home-feature-desc">
+            Access quality seeds, fertilizers, and equipment. Sell your harvest directly to consumers at fair prices.
+          </p>
+          <Link to="/register?role=farmer" className="home-feature-link green-link">
+            Join as Farmer <span className="home-feature-arrow">→</span>
+          </Link>
+        </div>
+
+        <div className="home-feature-card">
+          <div className="home-feature-icon orange-bg">🚛</div>
+          <h3 className="home-feature-title">For Suppliers</h3>
+          <p className="home-feature-desc">
+            Expand your business reach. Connect with local farmers and supply essential agricultural inputs.
+          </p>
+          <Link to="/register?role=supplier" className="home-feature-link orange-link">
+            Join as Supplier <span className="home-feature-arrow">→</span>
+          </Link>
+        </div>
+
+        <div className="home-feature-card">
+          <div className="home-feature-icon blue-bg">🛒</div>
+          <h3 className="home-feature-title">For Consumers</h3>
+          <p className="home-feature-desc">
+            Buy fresh, organic produce directly from the source. Support local farmers and eat healthy.
+          </p>
+          <Link to="/register?role=consumer" className="home-feature-link blue-link">
+            Shop Fresh <span className="home-feature-arrow">→</span>
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
 };
 
 export default Home;
