@@ -13,6 +13,8 @@ from .serializers import (
 User = get_user_model()
 
 
+from django.db import transaction
+
 class UserRegistrationView(generics.CreateAPIView):
     """API endpoint for user registration"""
     queryset = User.objects.all()
@@ -20,19 +22,35 @@ class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
     
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        
-        return Response({
-            'user': UserSerializer(user).data,
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'message': 'User registered successfully'
-        }, status=status.HTTP_201_CREATED)
+        try:
+            with transaction.atomic():
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                user = serializer.save()
+                
+                # Generate JWT tokens
+                refresh = RefreshToken.for_user(user)
+                
+                return Response({
+                    'user': UserSerializer(user).data,
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    'message': 'User registered successfully'
+                }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            # Log the error for debugging
+            import traceback
+            traceback.print_exc()
+            
+            # If it's a validation error, let DRF handle it
+            from rest_framework.exceptions import ValidationError
+            if isinstance(e, ValidationError):
+                raise e
+                
+            return Response({
+                'error': 'Registration failed',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class UserLoginView(APIView):

@@ -19,6 +19,8 @@ const Register = () => {
         first_name: '',
         last_name: '',
         address: '',
+        latitude: null,
+        longitude: null
     });
 
     const [error, setError] = useState('');
@@ -28,12 +30,51 @@ const Register = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = parseFloat(position.coords.latitude).toFixed(6);
+                    const lng = parseFloat(position.coords.longitude).toFixed(6);
+                    setFormData(prev => ({
+                        ...prev,
+                        latitude: lat,
+                        longitude: lng
+                    }));
+                    alert(`Location detected: ${lat}, ${lng}`);
+                },
+                (error) => {
+                    alert("Error detecting location: " + error.message);
+                }
+            );
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
+        // Basic Validations
+        const usernameRegex = /^[\w.@+-]+$/;
+        if (!usernameRegex.test(formData.username)) {
+            setError("Username can only contain letters, numbers, and @/./+/-/_ characters.");
+            return;
+        }
+
         if (formData.password !== formData.password2) {
             setError("Passwords do not match");
+            return;
+        }
+
+        if (formData.password.length < 8) {
+            setError("Password must be at least 8 characters long.");
+            return;
+        }
+
+        if (/^\d+$/.test(formData.password)) {
+            setError("Password cannot be entirely numeric.");
             return;
         }
 
@@ -41,8 +82,22 @@ const Register = () => {
             await register(formData);
             navigate('/');
         } catch (err) {
-            setError(err.response?.data?.error || 'Registration failed. Please check your inputs.');
-            console.error(err);
+            console.error("Registration Error:", err);
+            // Extract detailed error message from DRF response
+            let errorMessage = "Registration failed.";
+            if (err.response && err.response.data) {
+                const data = err.response.data;
+                if (typeof data === 'object') {
+                    // Combine all error messages
+                    errorMessage = Object.keys(data).map(key => {
+                        const msg = Array.isArray(data[key]) ? data[key].join(' ') : data[key];
+                        return `${key}: ${msg}`;
+                    }).join(' | ');
+                } else {
+                    errorMessage = data;
+                }
+            }
+            setError(errorMessage);
         }
     };
 
@@ -52,7 +107,7 @@ const Register = () => {
                 <h2 className="auth-title">Create Account</h2>
                 <p className="auth-subtitle">Join the AgriConnect Community</p>
 
-                {error && <div className="error-message">{error}</div>}
+                {error && <div className="error-message" style={{ color: 'red', marginBottom: '1rem', padding: '10px', background: 'rgba(255,0,0,0.1)', borderRadius: '4px' }}>{error}</div>}
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     <div className="grid grid-cols-2 gap-4">
@@ -68,7 +123,15 @@ const Register = () => {
 
                     <div className="form-group">
                         <label className="form-label">Username</label>
-                        <input name="username" type="text" className="form-control" onChange={handleChange} required />
+                        <input
+                            name="username"
+                            type="text"
+                            className="form-control"
+                            onChange={handleChange}
+                            required
+                            pattern="[\w.@+-]+"
+                            title="Letters, numbers and @/./+/-/_ characters only"
+                        />
                     </div>
 
                     <div className="form-group">
@@ -96,26 +159,10 @@ const Register = () => {
                     </div>
 
                     <div className="form-group">
-                        <button type="button" className="btn btn-secondary" onClick={() => {
-                            if (navigator.geolocation) {
-                                navigator.geolocation.getCurrentPosition((position) => {
-                                    setFormData({
-                                        ...formData,
-                                        latitude: position.coords.latitude,
-                                        longitude: position.coords.longitude
-                                    });
-                                    alert("Location detected successfully!");
-                                }, (error) => {
-                                    alert("Error detecting location: " + error.message);
-                                });
-                            } else {
-                                alert("Geolocation is not supported by this browser.");
-                            }
-                        }} style={{ width: '100%', marginBottom: '1rem' }}>
-                            📍 Detect My Location
+                        <button type="button" className="btn btn-secondary" onClick={handleLocation} style={{ width: '100%', marginBottom: '1rem' }}>
+                            📍 Detect My Location {formData.latitude && '✅'}
                         </button>
-                        <input type="hidden" name="latitude" value={formData.latitude || ''} />
-                        <input type="hidden" name="longitude" value={formData.longitude || ''} />
+                        {formData.latitude && <p className="text-sm text-gray-500">Lat: {formData.latitude}, Lng: {formData.longitude}</p>}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -130,11 +177,11 @@ const Register = () => {
                     </div>
 
                     <button type="submit" className="auth-btn">Register</button>
-                </form>
 
-                <div className="auth-footer">
-                    <p>Already have an account? <a href="/login">Login</a></p>
-                </div>
+                    <div className="auth-footer" style={{ marginTop: '1rem', textAlign: 'center' }}>
+                        <p>Already have an account? <a href="/login" style={{ color: 'var(--primary-color)' }}>Login</a></p>
+                    </div>
+                </form>
             </div>
         </div>
     );
