@@ -1,0 +1,116 @@
+.home-page {
+  /* Set a nice background gradient */
+  background: linear-gradient(135deg, #f0fdf4, #ecfeff);
+  min-height: 100vh;
+  margin-top: -6rem; /* pull up under navbar */
+  padding-top: 6rem;
+}
+
+.hero-section {
+  text-align: center;
+  padding: 6rem 1rem;
+  margin-bottom: 2rem;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.05em;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: #111827;
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+}
+
+.highlight { color: #10B981; }
+.highlight-secondary { color: #06B6D4; }
+.highlight-accent { color: #F59E0B; }
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: #4B5563;
+  max-width: 600px;
+  margin: 0 auto 3rem;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+.features-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  padding-bottom: 5rem;
+}
+
+.feature-card {
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: left;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.icon-wrapper {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.farmer-bg { background: #d1fae5; color: #059669; }
+.supplier-bg { background: #cffafe; color: #0891b2; }
+.consumer-bg { background: #fef3c7; color: #d97706; }
+
+.feature-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.feature-card p {
+  color: #4B5563;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.feature-link {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: gap 0.2s;
+}
+
+.feature-link:hover {
+  gap: 0.75rem;
+  text-decoration: underline;
+}
