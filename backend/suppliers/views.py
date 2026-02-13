@@ -6,12 +6,16 @@ from django.db.models import Q, Sum, Count
 from django.utils import timezone
 from datetime import timedelta
 from math import radians, cos, sin, asin, sqrt
-from .models import SupplierProfile, Product, SupplierReview
+from .models import SupplierProfile, Product, Equipment, Order, Rental, StockLog, SupplierReview
 from .serializers import (
     SupplierProfileSerializer, 
     SupplierProfileUpdateSerializer,
     SupplierDashboardSerializer,
-    ProductSerializer, 
+    ProductSerializer,
+    EquipmentSerializer,
+    OrderSerializer,
+    RentalSerializer,
+    StockLogSerializer,
     SupplierReviewSerializer
 )
 
@@ -78,6 +82,9 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
         try:
             profile = SupplierProfile.objects.get(user=request.user)
             products = Product.objects.filter(supplier=profile)
+            equipment = Equipment.objects.filter(supplier=profile)
+            orders = Order.objects.filter(supplier=profile)
+            rentals = Rental.objects.filter(supplier=profile)
             
             # Calculate stats
             total_products = products.count()
@@ -85,12 +92,25 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
                 total=Sum('stock_quantity')
             )['total'] or 0
             
-            # For now, these are placeholder values since we don't have Order model yet
-            active_orders = 0
-            active_rentals = 0
-            today_earnings = 0
-            pending_requests = 0
-            total_earnings = 0
+            # Equipment stats
+            total_equipment = equipment.count()
+            available_equipment = equipment.filter(status='available').count()
+            
+            # Real Transaction Stats
+            active_orders = orders.filter(status__in=['pending', 'confirmed', 'processing', 'ready']).count()
+            active_rentals = rentals.filter(status__in=['pending', 'confirmed', 'active']).count()
+            
+            # Earnings
+            today = timezone.now().date()
+            today_order_earnings = orders.filter(status='delivered', delivered_at__date=today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+            today_rental_earnings = rentals.filter(status='completed', completed_at__date=today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+            today_earnings = today_order_earnings + today_rental_earnings
+            
+            pending_requests = orders.filter(status='pending').count() + rentals.filter(status='pending').count()
+            
+            total_order_earnings = orders.filter(status='delivered').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+            total_rental_earnings = rentals.filter(status='completed').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+            total_earnings = total_order_earnings + total_rental_earnings
             
             # Low stock alert (< 10 units)
             low_stock_count = products.filter(stock_quantity__lt=10, is_available=True).count()
@@ -103,7 +123,9 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
                 'today_earnings': today_earnings,
                 'pending_requests': pending_requests,
                 'low_stock_count': low_stock_count,
-                'total_earnings': total_earnings
+                'total_earnings': total_earnings,
+                'total_equipment': total_equipment,
+                'available_equipment': available_equipment,
             }
             
             serializer = SupplierDashboardSerializer(stats)
@@ -178,6 +200,145 @@ class ProductViewSet(viewsets.ModelViewSet):
         
         return Response(nearby_products)
 
+    @action(detail=True, methods=['post'])
+    def adjust_stock(self, request, pk=None):
+        """Manually adjust stock quantity and log the change"""
+        try:
+            product = self.get_object()
+            quantity_change = int(request.data.get('quantity', 0))
+            change_type = request.data.get('change_type', 'adjustment')
+            note = request.data.get('note', '')
+            
+            if quantity_change == 0:
+                return Response({'error': 'Quantity change cannot be zero'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            previous_stock = product.stock_quantity
+            product.stock_quantity += quantity_change
+            
+            if product.stock_quantity < 0:
+                return Response({'error': 'Stock cannot be negative'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            product.save()
+            
+            # Log the change
+            StockLog.objects.create(
+                product=product,
+                change_type=change_type,
+                quantity=quantity_change,
+                previous_stock=previous_stock,
+                current_stock=product.stock_quantity,
+                note=note,
+                updated_by=request.user
+            )
+            
+            return Response({
+                'status': 'Stock adjusted successfully',
+                'new_stock': product.stock_quantity
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def inventory_stats(self, request):
+        """Get inventory overview statistics"""
+        try:
+            supplier_profile = SupplierProfile.objects.get(user=request.user)
+            products = Product.objects.filter(supplier=supplier_profile)
+            equipment = Equipment.objects.filter(supplier=supplier_profile)
+            
+            total_items = products.count()
+            low_stock_items = products.filter(stock_quantity__lt=10, is_available=True)
+            out_of_stock = products.filter(stock_quantity=0, is_available=True).count()
+            
+            # Category-wise distribution
+            category_stats = products.values('category').annotate(count=Count('id'))
+            
+            # Stock logs (last 20)
+            logs = StockLog.objects.filter(product__supplier=supplier_profile).order_by('-created_at')[:20]
+            log_serializer = StockLogSerializer(logs, many=True)
+            
+            stats = {
+                'total_items': total_items,
+                'low_stock_count': low_stock_items.count(),
+                'out_of_stock_count': out_of_stock,
+                'total_equipment': equipment.count(),
+                'available_equipment': equipment.filter(status='available').count(),
+                'category_distribution': list(category_stats),
+                'recent_activity': log_serializer.data,
+                'low_stock_list': ProductSerializer(low_stock_items, many=True).data
+            }
+            
+            return Response(stats)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class EquipmentViewSet(viewsets.ModelViewSet):
+    """ViewSet for equipment"""
+    queryset = Equipment.objects.filter(is_available=True)
+    serializer_class = EquipmentSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description', 'equipment_type', 'brand']
+    ordering_fields = ['daily_rate', 'created_at', 'rating']
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'search_nearby']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+    
+    def perform_create(self, serializer):
+        supplier_profile = SupplierProfile.objects.get(user=self.request.user)
+        serializer.save(supplier=supplier_profile)
+    
+    @action(detail=False, methods=['get'])
+    def my_equipment(self, request):
+        """Get current supplier's equipment"""
+        try:
+            supplier_profile = SupplierProfile.objects.get(user=request.user)
+            equipment = Equipment.objects.filter(supplier=supplier_profile)
+            serializer = self.get_serializer(equipment, many=True)
+            return Response(serializer.data)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=False, methods=['get'])
+    def search_nearby(self, request):
+        """Search equipment by location and type"""
+        latitude = request.query_params.get('latitude')
+        longitude = request.query_params.get('longitude')
+        equipment_type = request.query_params.get('equipment_type')
+        max_distance = float(request.query_params.get('max_distance', 50))  # km
+        
+        if not latitude or not longitude:
+            return Response({'error': 'Latitude and longitude required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        latitude = float(latitude)
+        longitude = float(longitude)
+        
+        equipment = Equipment.objects.filter(is_available=True, status='available')
+        
+        if equipment_type:
+            equipment = equipment.filter(equipment_type=equipment_type)
+        
+        # Filter by distance
+        nearby_equipment = []
+        for equip in equipment:
+            if equip.supplier.user.latitude and equip.supplier.user.longitude:
+                distance = haversine(
+                    longitude, latitude,
+                    float(equip.supplier.user.longitude),
+                    float(equip.supplier.user.latitude)
+                )
+                if distance <= max_distance:
+                    equip_data = EquipmentSerializer(equip).data
+                    equip_data['distance'] = round(distance, 2)
+                    nearby_equipment.append(equip_data)
+        
+        # Sort by distance
+        nearby_equipment.sort(key=lambda x: x['distance'])
+        
+        return Response(nearby_equipment)
+
 
 class SupplierReviewViewSet(viewsets.ModelViewSet):
     """ViewSet for supplier reviews"""
@@ -194,3 +355,238 @@ class SupplierReviewViewSet(viewsets.ModelViewSet):
         supplier.rating = round(avg_rating, 2)
         supplier.total_reviews = len(reviews)
         supplier.save()
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    """ViewSet for orders"""
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['order_number', 'customer__username', 'product__name']
+    ordering_fields = ['created_at', 'total_amount', 'status']
+    
+    def get_queryset(self):
+        """Filter orders by supplier"""
+        user = self.request.user
+        if hasattr(user, 'supplier_profile'):
+            return Order.objects.filter(supplier=user.supplier_profile)
+        return Order.objects.none()
+    
+    @action(detail=False, methods=['get'])
+    def my_orders(self, request):
+        """Get current supplier's orders"""
+        try:
+            supplier_profile = SupplierProfile.objects.get(user=request.user)
+            orders = Order.objects.filter(supplier=supplier_profile)
+            
+            # Filter by status if provided
+            status_filter = request.query_params.get('status')
+            if status_filter:
+                orders = orders.filter(status=status_filter)
+            
+            serializer = self.get_serializer(orders, many=True)
+            return Response(serializer.data)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=True, methods=['patch'])
+    def update_status(self, request, pk=None):
+        """Update order status and handle inventory"""
+        order = self.get_object()
+        new_status = request.data.get('status')
+        old_status = order.status
+        
+        if new_status not in dict(Order.STATUS_CHOICES):
+            return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Logic for inventory deduction on confirmation
+        if new_status == 'confirmed' and old_status != 'confirmed':
+            product = order.product
+            if product.stock_quantity < order.quantity:
+                return Response({'error': f'Insufficient stock. Available: {product.stock_quantity}'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            previous_stock = product.stock_quantity
+            product.stock_quantity -= order.quantity
+            product.save()
+            
+            # Log the stock deduction
+            StockLog.objects.create(
+                product=product,
+                change_type='sale',
+                quantity=-order.quantity,
+                previous_stock=previous_stock,
+                current_stock=product.stock_quantity,
+                note=f"Automatic deduction for Order {order.order_number}",
+                updated_by=request.user
+            )
+        
+        # Logic for inventory return on cancellation
+        if new_status == 'cancelled' and old_status == 'confirmed':
+            product = order.product
+            previous_stock = product.stock_quantity
+            product.stock_quantity += order.quantity
+            product.save()
+            
+            # Log the stock return
+            StockLog.objects.create(
+                product=product,
+                change_type='return',
+                quantity=order.quantity,
+                previous_stock=previous_stock,
+                current_stock=product.stock_quantity,
+                note=f"Stock returned for cancelled Order {order.order_number}",
+                updated_by=request.user
+            )
+
+        order.status = new_status
+        
+        # Update timestamps based on status
+        if new_status == 'confirmed' and not order.confirmed_at:
+            order.confirmed_at = timezone.now()
+        elif new_status == 'delivered' and not order.delivered_at:
+            order.delivered_at = timezone.now()
+        
+        order.save()
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['patch'])
+    def update_payment_status(self, request, pk=None):
+        """Update payment status"""
+        order = self.get_object()
+        new_payment_status = request.data.get('payment_status')
+        
+        if new_payment_status not in dict(Order.PAYMENT_STATUS_CHOICES):
+            return Response({'error': 'Invalid payment status'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        order.payment_status = new_payment_status
+        order.save()
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def statistics(self, request):
+        """Get order statistics"""
+        try:
+            supplier_profile = SupplierProfile.objects.get(user=request.user)
+            orders = Order.objects.filter(supplier=supplier_profile)
+            
+            stats = {
+                'total_orders': orders.count(),
+                'pending_orders': orders.filter(status='pending').count(),
+                'confirmed_orders': orders.filter(status='confirmed').count(),
+                'processing_orders': orders.filter(status='processing').count(),
+                'delivered_orders': orders.filter(status='delivered').count(),
+                'cancelled_orders': orders.filter(status='cancelled').count(),
+                'total_revenue': orders.filter(status='delivered').aggregate(Sum('total_amount'))['total_amount__sum'] or 0,
+                'pending_revenue': orders.filter(status__in=['pending', 'confirmed', 'processing']).aggregate(Sum('total_amount'))['total_amount__sum'] or 0,
+            }
+            
+            return Response(stats)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class RentalViewSet(viewsets.ModelViewSet):
+    """ViewSet for rentals"""
+    queryset = Rental.objects.all()
+    serializer_class = RentalSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['rental_number', 'customer__username', 'equipment__name']
+    ordering_fields = ['created_at', 'start_date', 'total_amount', 'status']
+    
+    def get_queryset(self):
+        """Filter rentals by supplier"""
+        user = self.request.user
+        if hasattr(user, 'supplier_profile'):
+            return Rental.objects.filter(supplier=user.supplier_profile)
+        return Rental.objects.none()
+    
+    @action(detail=False, methods=['get'])
+    def my_rentals(self, request):
+        """Get current supplier's rentals"""
+        try:
+            supplier_profile = SupplierProfile.objects.get(user=request.user)
+            rentals = Rental.objects.filter(supplier=supplier_profile)
+            
+            # Filter by status if provided
+            status_filter = request.query_params.get('status')
+            if status_filter:
+                rentals = rentals.filter(status=status_filter)
+            
+            serializer = self.get_serializer(rentals, many=True)
+            return Response(serializer.data)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=True, methods=['patch'])
+    def update_status(self, request, pk=None):
+        """Update rental status"""
+        rental = self.get_object()
+        new_status = request.data.get('status')
+        
+        if new_status not in dict(Rental.STATUS_CHOICES):
+            return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        rental.status = new_status
+        
+        # Update timestamps and equipment status based on rental status
+        if new_status == 'confirmed' and not rental.confirmed_at:
+            rental.confirmed_at = timezone.now()
+        elif new_status == 'active' and not rental.started_at:
+            rental.started_at = timezone.now()
+            # Update equipment status to rented
+            rental.equipment.status = 'rented'
+            rental.equipment.save()
+        elif new_status == 'completed' and not rental.completed_at:
+            rental.completed_at = timezone.now()
+            # Update equipment status back to available
+            rental.equipment.status = 'available'
+            rental.equipment.total_rentals += 1
+            rental.equipment.save()
+        elif new_status == 'cancelled':
+            # Make equipment available again
+            rental.equipment.status = 'available'
+            rental.equipment.save()
+        
+        rental.save()
+        serializer = self.get_serializer(rental)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['patch'])
+    def update_payment_status(self, request, pk=None):
+        """Update payment status"""
+        rental = self.get_object()
+        new_payment_status = request.data.get('payment_status')
+        
+        if new_payment_status not in dict(Rental.PAYMENT_STATUS_CHOICES):
+            return Response({'error': 'Invalid payment status'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        rental.payment_status = new_payment_status
+        rental.save()
+        serializer = self.get_serializer(rental)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def statistics(self, request):
+        """Get rental statistics"""
+        try:
+            supplier_profile = SupplierProfile.objects.get(user=request.user)
+            rentals = Rental.objects.filter(supplier=supplier_profile)
+            
+            stats = {
+                'total_rentals': rentals.count(),
+                'pending_rentals': rentals.filter(status='pending').count(),
+                'confirmed_rentals': rentals.filter(status='confirmed').count(),
+                'active_rentals': rentals.filter(status='active').count(),
+                'completed_rentals': rentals.filter(status='completed').count(),
+                'cancelled_rentals': rentals.filter(status='cancelled').count(),
+                'total_revenue': rentals.filter(status='completed').aggregate(Sum('total_amount'))['total_amount__sum'] or 0,
+                'pending_revenue': rentals.filter(status__in=['pending', 'confirmed', 'active']).aggregate(Sum('total_amount'))['total_amount__sum'] or 0,
+            }
+            
+            return Response(stats)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)

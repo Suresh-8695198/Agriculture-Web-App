@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-    FaTachometerAlt, FaUser, FaBoxes, FaTractor, FaClipboardList, 
-    FaCalendarCheck, FaWarehouse, FaMoneyBillWave, FaBell, FaStar, 
-    FaChartBar, FaQuestionCircle, FaSignOutAlt, FaBars, FaTimes 
+import {
+    FaTachometerAlt, FaUser, FaBoxes, FaTractor, FaClipboardList,
+    FaCalendarCheck, FaWarehouse, FaMoneyBillWave, FaBell, FaStar,
+    FaChartBar, FaQuestionCircle, FaSignOutAlt, FaBars, FaTimes,
+    FaChevronLeft, FaChevronRight
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './SupplierSidebar.css';
@@ -48,12 +49,18 @@ const SupplierSidebar = () => {
 
             {/* Sidebar */}
             <div className={`supplier-sidebar ${isOpen ? 'open' : 'closed'}`}>
+                {/* Desktop Toggle Button - Moved to Edge */}
+                <button className="desktop-toggle-btn" onClick={toggleSidebar} title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}>
+                    {isOpen ? <FaChevronLeft /> : <FaChevronRight />}
+                </button>
+
                 {/* Header */}
                 <div className="sidebar-header">
                     <div className="sidebar-logo">
                         <FaTractor className="logo-icon" />
                         {isOpen && <span className="logo-text">AgriConnect</span>}
                     </div>
+
                     {isOpen && (
                         <div className="sidebar-user">
                             <div className="user-avatar-small">
@@ -73,7 +80,7 @@ const SupplierSidebar = () => {
                         <NavLink
                             key={index}
                             to={item.path}
-                            className={({ isActive }) => 
+                            className={({ isActive }) =>
                                 `nav-item ${isActive ? 'active' : ''}`
                             }
                             title={!isOpen ? item.label : ''}

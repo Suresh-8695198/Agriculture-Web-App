@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import SupplierProfile, Product, SupplierReview
+from .models import SupplierProfile, Product, Equipment, Order, Rental, StockLog, SupplierReview
 from accounts.serializers import UserSerializer
 
 class SupplierProfileSerializer(serializers.ModelSerializer):
@@ -66,7 +66,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['supplier', 'created_at', 'updated_at']
     
     def get_supplier_location(self, obj):
         return {
@@ -76,6 +76,68 @@ class ProductSerializer(serializers.ModelSerializer):
         }
 
 
+class EquipmentSerializer(serializers.ModelSerializer):
+    supplier_name = serializers.CharField(source='supplier.business_name', read_only=True)
+    supplier_location = serializers.SerializerMethodField()
+    equipment_type_display = serializers.CharField(source='get_equipment_type_display', read_only=True)
+    condition_display = serializers.CharField(source='get_condition_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = Equipment
+        fields = '__all__'
+        read_only_fields = ['supplier', 'total_rentals', 'rating', 'created_at', 'updated_at']
+    
+    def get_supplier_location(self, obj):
+        return {
+            'latitude': obj.supplier.user.latitude,
+            'longitude': obj.supplier.user.longitude,
+            'address': obj.supplier.user.address
+        }
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.username', read_only=True)
+    customer_phone = serializers.CharField(source='customer.phone_number', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_category = serializers.CharField(source='product.category', read_only=True)
+    product_image = serializers.ImageField(source='product.image', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    payment_status_display = serializers.CharField(source='get_payment_status_display', read_only=True)
+    delivery_method_display = serializers.CharField(source='get_delivery_method_display', read_only=True)
+    
+    class Meta:
+        model = Order
+        fields = '__all__'
+        read_only_fields = ['order_number', 'supplier', 'created_at', 'updated_at', 'confirmed_at', 'delivered_at']
+
+
+class RentalSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.username', read_only=True)
+    customer_phone = serializers.CharField(source='customer.phone_number', read_only=True)
+    equipment_name = serializers.CharField(source='equipment.name', read_only=True)
+    equipment_type = serializers.CharField(source='equipment.equipment_type', read_only=True)
+    equipment_image = serializers.ImageField(source='equipment.image', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    payment_status_display = serializers.CharField(source='get_payment_status_display', read_only=True)
+    
+    class Meta:
+        model = Rental
+        fields = '__all__'
+        read_only_fields = ['rental_number', 'supplier', 'rental_duration_days', 'created_at', 'updated_at', 'confirmed_at', 'started_at', 'completed_at']
+
+
+class StockLogSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    updated_by_name = serializers.CharField(source='updated_by.username', read_only=True)
+    change_type_display = serializers.CharField(source='get_change_type_display', read_only=True)
+    
+    class Meta:
+        model = StockLog
+        fields = '__all__'
+        read_only_fields = ['previous_stock', 'current_stock', 'updated_by', 'created_at']
+
+
 class SupplierReviewSerializer(serializers.ModelSerializer):
     reviewer_name = serializers.CharField(source='reviewer.username', read_only=True)
     
@@ -83,3 +145,4 @@ class SupplierReviewSerializer(serializers.ModelSerializer):
         model = SupplierReview
         fields = '__all__'
         read_only_fields = ['created_at']
+

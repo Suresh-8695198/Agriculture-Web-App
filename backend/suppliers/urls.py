@@ -1,11 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import SupplierProfileViewSet, ProductViewSet, SupplierReviewViewSet
+from .views import SupplierProfileViewSet, ProductViewSet, EquipmentViewSet, OrderViewSet, RentalViewSet, SupplierReviewViewSet
 
 # Create router
 router = DefaultRouter()
 router.register(r'profiles', SupplierProfileViewSet, basename='supplier-profile')
 router.register(r'products', ProductViewSet, basename='product')
+router.register(r'equipment', EquipmentViewSet, basename='equipment')
+router.register(r'orders', OrderViewSet, basename='order')
+router.register(r'rentals', RentalViewSet, basename='rental')
 router.register(r'reviews', SupplierReviewViewSet, basename='supplier-review')
 
 # URL patterns combining explicit paths and router

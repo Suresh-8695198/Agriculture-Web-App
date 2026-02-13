@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { 
+import {
     FaStore, FaUser, FaPhone, FaEnvelope, FaFileAlt, FaMapMarkerAlt,
     FaIdCard, FaImage, FaSave, FaEdit, FaTimes, FaSeedling, FaIndustry,
     FaTractor
@@ -24,16 +24,16 @@ const SupplierProfile = () => {
         gst_number: '',
         license_number: '',
         description: '',
-        
+
         // Contact
         alternate_number: '',
-        
+
         // Address
         village: '',
         district: '',
         state: '',
         pin_code: '',
-        
+
         // Business Type
         business_types: []
     });
@@ -58,12 +58,12 @@ const SupplierProfile = () => {
         try {
             const response = await api.get('suppliers/profiles/my_profile/');
             setProfile(response.data);
-            
+
             // Parse business_types string to array
-            const businessTypesArray = response.data.business_types 
+            const businessTypesArray = response.data.business_types
                 ? response.data.business_types.split(',').map(bt => bt.trim())
                 : [];
-            
+
             setFormData({
                 shop_name: response.data.shop_name || '',
                 owner_name: response.data.owner_name || '',
@@ -111,7 +111,7 @@ const SupplierProfile = () => {
         setSaving(true);
         try {
             const formDataToSend = new FormData();
-            
+
             // Append text fields
             Object.keys(formData).forEach(key => {
                 if (key === 'business_types') {
@@ -120,7 +120,7 @@ const SupplierProfile = () => {
                     formDataToSend.append(key, formData[key]);
                 }
             });
-            
+
             // Append documents if changed
             Object.keys(documents).forEach(key => {
                 if (documents[key]) {
@@ -167,7 +167,7 @@ const SupplierProfile = () => {
     return (
         <div className="supplier-portal-layout">
             <SupplierSidebar />
-            
+
             <div className="portal-main-content">
                 {/* Header */}
                 <div className="portal-header">
@@ -182,15 +182,15 @@ const SupplierProfile = () => {
                             </button>
                         ) : (
                             <div className="btn-group">
-                                <button 
-                                    className="btn-success-supplier" 
+                                <button
+                                    className="btn-success-supplier"
                                     onClick={handleSave}
                                     disabled={saving}
                                 >
                                     <FaSave /> {saving ? 'Saving...' : 'Save Changes'}
                                 </button>
-                                <button 
-                                    className="btn-secondary-supplier" 
+                                <button
+                                    className="btn-secondary-supplier"
                                     onClick={handleCancel}
                                     disabled={saving}
                                 >
@@ -424,9 +424,8 @@ const SupplierProfile = () => {
                         {businessTypeOptions.map(option => (
                             <div
                                 key={option.value}
-                                className={`business-type-card ${
-                                    formData.business_types.includes(option.value) ? 'selected' : ''
-                                } ${!isEditing ? 'disabled' : ''}`}
+                                className={`business-type-card ${formData.business_types.includes(option.value) ? 'selected' : ''
+                                    } ${!isEditing ? 'disabled' : ''}`}
                                 onClick={() => isEditing && handleBusinessTypeToggle(option.value)}
                             >
                                 <div className="type-icon">{option.icon}</div>

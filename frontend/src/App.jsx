@@ -14,8 +14,11 @@ import ConsumerDashboard from './pages/ConsumerDashboard';
 // Supplier Portal Pages
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import SupplierProfile from './pages/supplier/SupplierProfile';
-import SupplierProducts from './pages/supplier/SupplierProducts';
-import SupplierEquipment from './pages/supplier/SupplierEquipment';
+import ProductManagement from './pages/supplier/ProductManagement';
+import EquipmentManagement from './pages/supplier/EquipmentManagement';
+import OrdersManagement from './pages/supplier/OrdersManagement';
+import RentalsManagement from './pages/supplier/RentalsManagement';
+import InventoryManagement from './pages/supplier/InventoryManagement';
 import SupplierComingSoon from './pages/supplier/SupplierComingSoon';
 
 import { FaClipboardList, FaCalendarCheck, FaWarehouse, FaMoneyBillWave, FaBell, FaStar, FaChartBar, FaQuestionCircle } from 'react-icons/fa';
@@ -29,10 +32,10 @@ const NO_NAVBAR_PATHS = ['/', '/login', '/register', '/supplier'];
 const AppLayout = () => {
   const location = useLocation();
   const hideNavbar = NO_NAVBAR_PATHS.some(
-    (p) => location.pathname === p || 
-          location.pathname.startsWith('/login') || 
-          location.pathname.startsWith('/register') ||
-          location.pathname.startsWith('/supplier')
+    (p) => location.pathname === p ||
+      location.pathname.startsWith('/login') ||
+      location.pathname.startsWith('/register') ||
+      location.pathname.startsWith('/supplier')
   );
 
   return (
@@ -58,7 +61,7 @@ const AppLayout = () => {
             </ProtectedRoute>
           }
         />
-        
+
         {/* Supplier Portal Routes */}
         <Route
           path="/supplier/dashboard"
@@ -80,7 +83,7 @@ const AppLayout = () => {
           path="/supplier/products"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierProducts />
+              <ProductManagement />
             </ProtectedRoute>
           }
         />
@@ -88,7 +91,7 @@ const AppLayout = () => {
           path="/supplier/equipment"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierEquipment />
+              <EquipmentManagement />
             </ProtectedRoute>
           }
         />
@@ -96,11 +99,7 @@ const AppLayout = () => {
           path="/supplier/orders"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon 
-                title="Orders & Requests" 
-                subtitle="Manage your orders and customer requests"
-                icon={<FaClipboardList />}
-              />
+              <OrdersManagement />
             </ProtectedRoute>
           }
         />
@@ -108,11 +107,7 @@ const AppLayout = () => {
           path="/supplier/rentals"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon 
-                title="Rentals" 
-                subtitle="Track equipment rental bookings"
-                icon={<FaCalendarCheck />}
-              />
+              <RentalsManagement />
             </ProtectedRoute>
           }
         />
@@ -120,11 +115,7 @@ const AppLayout = () => {
           path="/supplier/inventory"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon 
-                title="Inventory / Stock" 
-                subtitle="Manage your inventory and stock levels"
-                icon={<FaWarehouse />}
-              />
+              <InventoryManagement />
             </ProtectedRoute>
           }
         />
@@ -132,8 +123,8 @@ const AppLayout = () => {
           path="/supplier/payments"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon 
-                title="Payments & Earnings" 
+              <SupplierComingSoon
+                title="Payments & Earnings"
                 subtitle="View your payments and earnings history"
                 icon={<FaMoneyBillWave />}
               />
@@ -144,8 +135,8 @@ const AppLayout = () => {
           path="/supplier/notifications"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon 
-                title="Notifications" 
+              <SupplierComingSoon
+                title="Notifications"
                 subtitle="View all your notifications"
                 icon={<FaBell />}
               />
@@ -156,8 +147,8 @@ const AppLayout = () => {
           path="/supplier/reviews"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon 
-                title="Ratings & Reviews" 
+              <SupplierComingSoon
+                title="Ratings & Reviews"
                 subtitle="View customer ratings and reviews"
                 icon={<FaStar />}
               />
@@ -168,8 +159,8 @@ const AppLayout = () => {
           path="/supplier/reports"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon 
-                title="Reports" 
+              <SupplierComingSoon
+                title="Reports"
                 subtitle="Generate and view business reports"
                 icon={<FaChartBar />}
               />
@@ -180,15 +171,15 @@ const AppLayout = () => {
           path="/supplier/support"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon 
-                title="Support / Help" 
+              <SupplierComingSoon
+                title="Support / Help"
                 subtitle="Get help and support"
                 icon={<FaQuestionCircle />}
               />
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/consumer/marketplace"
           element={

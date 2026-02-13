@@ -10,13 +10,13 @@
     height: 100vh;
     background: linear-gradient(180deg, #8B6F47 0%, #7a5f3d 100%);
     color: white;
-    transition: width 0.3s ease;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     width: 280px;
     z-index: 1000;
     display: flex;
     flex-direction: column;
     box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
+    overflow: visible; /* CRITICAL: Allow button to hang off edge */
 }
 
 .supplier-sidebar.closed {
@@ -63,10 +63,49 @@
     transform: translateY(-2px);
 }
 
+/* Desktop Toggle Button - Floating Edge Design */
+.desktop-toggle-btn {
+    position: absolute;
+    top: 50px;
+    right: -15px; /* Hangs off the edge */
+    background: #F4C430; /* Solid Gold for visibility */
+    color: #8B6F47; /* Dark Brown for contrast */
+    border: 3px solid #8B6F47;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%; /* Circular */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 100;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.desktop-toggle-btn:hover {
+    background: white;
+    transform: scale(1.2) rotate(360deg);
+    color: #8B6F47;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.desktop-toggle-btn:active {
+    transform: scale(0.9);
+}
+
+/* Adjust position when closed */
+.supplier-sidebar.closed .desktop-toggle-btn {
+    right: -15px; /* Stays on the edge of the collapsed bar */
+}
+
 /* Header */
 .sidebar-header {
     padding: 1.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+    overflow: visible; /* Ensure button isn't clipped */
 }
 
 .sidebar-logo {
@@ -228,6 +267,11 @@
 @media (max-width: 1024px) {
     .sidebar-toggle {
         display: flex;
+    }
+
+    /* Hide desktop toggle on mobile */
+    .desktop-toggle-btn {
+        display: none;
     }
 
     .supplier-sidebar {

@@ -94,6 +94,265 @@ class Product(models.Model):
         ordering = ['-created_at']
 
 
+class StockLog(models.Model):
+    """History of stock changes for inventory tracking"""
+    CHANGE_TYPE_CHOICES = (
+        ('restock', 'Restock / Entry'),
+        ('sale', 'Sale / Order'),
+        ('adjustment', 'Manual Adjustment'),
+        ('return', 'Return'),
+        ('damaged', 'Damaged / Waste'),
+    )
+    
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stock_logs')
+    change_type = models.CharField(max_length=20, choices=CHANGE_TYPE_CHOICES)
+    quantity = models.IntegerField()  # positive for increase, negative for decrease
+    previous_stock = models.IntegerField()
+    current_stock = models.IntegerField()
+    note = models.TextField(blank=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.change_type} ({self.quantity})"
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class Equipment(models.Model):
+    """Equipment/Machinery for rental"""
+    
+    EQUIPMENT_TYPE_CHOICES = (
+        ('tractor', 'Tractor'),
+        ('harvester', 'Harvester'),
+        ('plough', 'Plough'),
+        ('seeder', 'Seeder'),
+        ('sprayer', 'Sprayer'),
+        ('thresher', 'Thresher'),
+        ('cultivator', 'Cultivator'),
+        ('rotavator', 'Rotavator'),
+        ('water_pump', 'Water Pump'),
+        ('other', 'Other'),
+    )
+    
+    CONDITION_CHOICES = (
+        ('excellent', 'Excellent'),
+        ('good', 'Good'),
+        ('fair', 'Fair'),
+        ('needs_repair', 'Needs Repair'),
+    )
+    
+    STATUS_CHOICES = (
+        ('available', 'Available'),
+        ('rented', 'Rented'),
+        ('maintenance', 'Under Maintenance'),
+        ('unavailable', 'Unavailable'),
+    )
+    
+    supplier = models.ForeignKey(SupplierProfile, on_delete=models.CASCADE, related_name='equipment')
+    name = models.CharField(max_length=200)
+    equipment_type = models.CharField(max_length=50, choices=EQUIPMENT_TYPE_CHOICES)
+    brand = models.CharField(max_length=100, blank=True)
+    model = models.CharField(max_length=100, blank=True)
+    year_of_manufacture = models.IntegerField(null=True, blank=True)
+    description = models.TextField()
+    
+    # Rental Information
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    daily_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    weekly_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    monthly_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Equipment Details
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='good')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+    fuel_type = models.CharField(max_length=50, blank=True)  # Diesel, Petrol, Electric
+    horsepower = models.IntegerField(null=True, blank=True)
+    
+    # Additional Information
+    requires_operator = models.BooleanField(default=False)
+    operator_charge_per_day = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    security_deposit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Availability
+    is_available = models.BooleanField(default=True)
+    last_maintenance_date = models.DateField(null=True, blank=True)
+    next_maintenance_date = models.DateField(null=True, blank=True)
+    
+    # Media
+    image = models.ImageField(upload_to='equipment/', null=True, blank=True)
+    
+    # Metadata
+    total_rentals = models.IntegerField(default=0)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.name} - {self.supplier.business_name}"
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Equipment'
+
+
+class Order(models.Model):
+    """Orders for products"""
+    
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('processing', 'Processing'),
+        ('ready', 'Ready for Pickup/Delivery'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
+        ('rejected', 'Rejected'),
+    )
+    
+    PAYMENT_STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('partial', 'Partial'),
+        ('paid', 'Paid'),
+        ('refunded', 'Refunded'),
+    )
+    
+    DELIVERY_METHOD_CHOICES = (
+        ('pickup', 'Self Pickup'),
+        ('delivery', 'Home Delivery'),
+    )
+    
+    # Order Information
+    order_number = models.CharField(max_length=50, unique=True, editable=False)
+    supplier = models.ForeignKey(SupplierProfile, on_delete=models.CASCADE, related_name='orders')
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='product_orders')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='orders')
+    
+    # Order Details
+    quantity = models.IntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    
+    # Delivery
+    delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHOD_CHOICES, default='pickup')
+    delivery_address = models.TextField(blank=True)
+    delivery_date = models.DateField(null=True, blank=True)
+    delivery_charges = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Additional Information
+    customer_notes = models.TextField(blank=True)
+    supplier_notes = models.TextField(blank=True)
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            # Generate unique order number
+            import random
+            import string
+            self.order_number = f"ORD-{self.created_at.strftime('%Y%m%d')}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.order_number} - {self.product.name}"
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class Rental(models.Model):
+    """Equipment rentals"""
+    
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('active', 'Active/Ongoing'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+        ('rejected', 'Rejected'),
+    )
+    
+    PAYMENT_STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('deposit_paid', 'Deposit Paid'),
+        ('partial', 'Partial'),
+        ('paid', 'Paid'),
+        ('refunded', 'Refunded'),
+    )
+    
+    # Rental Information
+    rental_number = models.CharField(max_length=50, unique=True, editable=False)
+    supplier = models.ForeignKey(SupplierProfile, on_delete=models.CASCADE, related_name='rentals')
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='equipment_rentals')
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='rentals')
+    
+    # Rental Period
+    start_date = models.DateField()
+    end_date = models.DateField()
+    actual_return_date = models.DateField(null=True, blank=True)
+    rental_duration_days = models.IntegerField(editable=False)
+    
+    # Pricing
+    daily_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    total_rental_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    security_deposit = models.DecimalField(max_digits=10, decimal_places=2)
+    operator_required = models.BooleanField(default=False)
+    operator_charges = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    
+    # Delivery/Pickup
+    delivery_address = models.TextField()
+    delivery_charges = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Additional Information
+    customer_notes = models.TextField(blank=True)
+    supplier_notes = models.TextField(blank=True)
+    
+    # Condition Tracking
+    condition_at_delivery = models.CharField(max_length=20, blank=True)
+    condition_at_return = models.CharField(max_length=20, blank=True)
+    damage_notes = models.TextField(blank=True)
+    damage_charges = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.rental_number:
+            # Generate unique rental number
+            import random
+            import string
+            self.rental_number = f"RNT-{self.created_at.strftime('%Y%m%d')}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+        
+        # Calculate rental duration
+        if self.start_date and self.end_date:
+            self.rental_duration_days = (self.end_date - self.start_date).days + 1
+        
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.rental_number} - {self.equipment.name}"
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
 class SupplierReview(models.Model):
     """Reviews for suppliers"""
     supplier = models.ForeignKey(SupplierProfile, on_delete=models.CASCADE, related_name='reviews')
