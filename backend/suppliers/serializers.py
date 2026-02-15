@@ -5,6 +5,7 @@ from accounts.serializers import UserSerializer
 class SupplierProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     business_types_list = serializers.SerializerMethodField()
+    full_address = serializers.SerializerMethodField()
     
     class Meta:
         model = SupplierProfile
@@ -16,6 +17,19 @@ class SupplierProfileSerializer(serializers.ModelSerializer):
         if obj.business_types:
             return [bt.strip() for bt in obj.business_types.split(',')]
         return []
+    
+    def get_full_address(self, obj):
+        """Return formatted full address"""
+        address_parts = []
+        if obj.village:
+            address_parts.append(obj.village)
+        if obj.district:
+            address_parts.append(obj.district)
+        if obj.state:
+            address_parts.append(obj.state)
+        if obj.pin_code:
+            address_parts.append(obj.pin_code)
+        return ', '.join(address_parts) if address_parts else 'Not provided'
 
 
 class SupplierProfileUpdateSerializer(serializers.ModelSerializer):
@@ -69,10 +83,21 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ['supplier', 'created_at', 'updated_at']
     
     def get_supplier_location(self, obj):
+        """Return formatted address instead of coordinates"""
+        address_parts = []
+        if obj.supplier.village:
+            address_parts.append(obj.supplier.village)
+        if obj.supplier.district:
+            address_parts.append(obj.supplier.district)
+        if obj.supplier.state:
+            address_parts.append(obj.supplier.state)
+        
         return {
-            'latitude': obj.supplier.user.latitude,
-            'longitude': obj.supplier.user.longitude,
-            'address': obj.supplier.user.address
+            'village': obj.supplier.village or '',
+            'district': obj.supplier.district or '',
+            'state': obj.supplier.state or '',
+            'pin_code': obj.supplier.pin_code or '',
+            'full_address': ', '.join(address_parts) if address_parts else 'Location not specified'
         }
 
 
@@ -89,10 +114,21 @@ class EquipmentSerializer(serializers.ModelSerializer):
         read_only_fields = ['supplier', 'total_rentals', 'rating', 'created_at', 'updated_at']
     
     def get_supplier_location(self, obj):
+        """Return formatted address instead of coordinates"""
+        address_parts = []
+        if obj.supplier.village:
+            address_parts.append(obj.supplier.village)
+        if obj.supplier.district:
+            address_parts.append(obj.supplier.district)
+        if obj.supplier.state:
+            address_parts.append(obj.supplier.state)
+        
         return {
-            'latitude': obj.supplier.user.latitude,
-            'longitude': obj.supplier.user.longitude,
-            'address': obj.supplier.user.address
+            'village': obj.supplier.village or '',
+            'district': obj.supplier.district or '',
+            'state': obj.supplier.state or '',
+            'pin_code': obj.supplier.pin_code or '',
+            'full_address': ', '.join(address_parts) if address_parts else 'Location not specified'
         }
 
 

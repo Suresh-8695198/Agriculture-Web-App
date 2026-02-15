@@ -31,6 +31,19 @@ def haversine(lon1, lat1, lon2, lat2):
     return km
 
 
+def get_or_create_supplier_profile(user):
+    """Get or create supplier profile for a user - prevents duplicate errors"""
+    profile, created = SupplierProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'business_name': f"{user.username}'s Business",
+            'owner_name': user.username,
+            'description': "Please update your business profile"
+        }
+    )
+    return profile
+
+
 class SupplierProfileViewSet(viewsets.ModelViewSet):
     """ViewSet for supplier profiles"""
     queryset = SupplierProfile.objects.filter(is_active=True)
@@ -42,13 +55,10 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='my_profile')
     def my_profile(self, request):
-        """Get current supplier's profile"""
-        try:
-            profile = SupplierProfile.objects.get(user=request.user)
-            serializer = self.get_serializer(profile)
-            return Response(serializer.data)
-        except SupplierProfile.DoesNotExist:
-            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        """Get current supplier's profile - auto-creates if doesn't exist"""
+        profile = get_or_create_supplier_profile(request.user)
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['post'])
     def create_profile(self, request):
@@ -63,75 +73,69 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['patch', 'put'], url_path='update_profile')
     def update_profile(self, request):
-        """Update current supplier's profile"""
-        try:
-            profile = SupplierProfile.objects.get(user=request.user)
-            serializer = SupplierProfileUpdateSerializer(profile, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            
-            # Return full profile data
-            full_serializer = SupplierProfileSerializer(profile)
-            return Response(full_serializer.data)
-        except SupplierProfile.DoesNotExist:
-            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        """Update current supplier's profile - auto-creates if doesn't exist"""
+        profile = get_or_create_supplier_profile(request.user)
+        serializer = SupplierProfileUpdateSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        # Return full profile data
+        full_serializer = SupplierProfileSerializer(profile)
+        return Response(full_serializer.data)
     
     @action(detail=False, methods=['get'], url_path='dashboard_stats')
     def dashboard_stats(self, request):
-        """Get dashboard statistics for current supplier"""
-        try:
-            profile = SupplierProfile.objects.get(user=request.user)
-            products = Product.objects.filter(supplier=profile)
-            equipment = Equipment.objects.filter(supplier=profile)
-            orders = Order.objects.filter(supplier=profile)
-            rentals = Rental.objects.filter(supplier=profile)
-            
-            # Calculate stats
-            total_products = products.count()
-            available_stock = products.filter(is_available=True).aggregate(
-                total=Sum('stock_quantity')
-            )['total'] or 0
-            
-            # Equipment stats
-            total_equipment = equipment.count()
-            available_equipment = equipment.filter(status='available').count()
-            
-            # Real Transaction Stats
-            active_orders = orders.filter(status__in=['pending', 'confirmed', 'processing', 'ready']).count()
-            active_rentals = rentals.filter(status__in=['pending', 'confirmed', 'active']).count()
-            
-            # Earnings
-            today = timezone.now().date()
-            today_order_earnings = orders.filter(status='delivered', delivered_at__date=today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-            today_rental_earnings = rentals.filter(status='completed', completed_at__date=today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-            today_earnings = today_order_earnings + today_rental_earnings
-            
-            pending_requests = orders.filter(status='pending').count() + rentals.filter(status='pending').count()
-            
-            total_order_earnings = orders.filter(status='delivered').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-            total_rental_earnings = rentals.filter(status='completed').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-            total_earnings = total_order_earnings + total_rental_earnings
-            
-            # Low stock alert (< 10 units)
-            low_stock_count = products.filter(stock_quantity__lt=10, is_available=True).count()
-            
-            stats = {
-                'total_products': total_products,
-                'available_stock': available_stock,
-                'active_orders': active_orders,
-                'active_rentals': active_rentals,
-                'today_earnings': today_earnings,
-                'pending_requests': pending_requests,
-                'low_stock_count': low_stock_count,
-                'total_earnings': total_earnings,
-                'total_equipment': total_equipment,
-                'available_equipment': available_equipment,
-            }
-            
-            serializer = SupplierDashboardSerializer(stats)
-            return Response(serializer.data)
-        except SupplierProfile.DoesNotExist:
-            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        """Get dashboard statistics for current supplier - auto-creates profile if needed"""
+        profile = get_or_create_supplier_profile(request.user)
+        products = Product.objects.filter(supplier=profile)
+        equipment = Equipment.objects.filter(supplier=profile)
+        orders = Order.objects.filter(supplier=profile)
+        rentals = Rental.objects.filter(supplier=profile)
+        
+        # Calculate stats
+        total_products = products.count()
+        available_stock = products.filter(is_available=True).aggregate(
+            total=Sum('stock_quantity')
+        )['total'] or 0
+        
+        # Equipment stats
+        total_equipment = equipment.count()
+        available_equipment = equipment.filter(status='available').count()
+        
+        # Real Transaction Stats
+        active_orders = orders.filter(status__in=['pending', 'confirmed', 'processing', 'ready']).count()
+        active_rentals = rentals.filter(status__in=['pending', 'confirmed', 'active']).count()
+        
+        # Earnings
+        today = timezone.now().date()
+        today_order_earnings = orders.filter(status='delivered', delivered_at__date=today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        today_rental_earnings = rentals.filter(status='completed', completed_at__date=today).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        today_earnings = today_order_earnings + today_rental_earnings
+        
+        pending_requests = orders.filter(status='pending').count() + rentals.filter(status='pending').count()
+        
+        total_order_earnings = orders.filter(status='delivered').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        total_rental_earnings = rentals.filter(status='completed').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        total_earnings = total_order_earnings + total_rental_earnings
+        
+        # Low stock alert (< 10 units)
+        low_stock_count = products.filter(stock_quantity__lt=10, is_available=True).count()
+        
+        stats = {
+            'total_products': total_products,
+            'available_stock': available_stock,
+            'active_orders': active_orders,
+            'active_rentals': active_rentals,
+            'today_earnings': today_earnings,
+            'pending_requests': pending_requests,
+            'low_stock_count': low_stock_count,
+            'total_earnings': total_earnings,
+            'total_equipment': total_equipment,
+            'available_equipment': available_equipment,
+        }
+        
+        serializer = SupplierDashboardSerializer(stats)
+        return Response(serializer.data)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -153,14 +157,11 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def my_products(self, request):
-        """Get current supplier's products"""
-        try:
-            supplier_profile = SupplierProfile.objects.get(user=request.user)
-            products = Product.objects.filter(supplier=supplier_profile)
-            serializer = self.get_serializer(products, many=True)
-            return Response(serializer.data)
-        except SupplierProfile.DoesNotExist:
-            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        """Get current supplier's products - auto-creates profile if needed"""
+        supplier_profile = get_or_create_supplier_profile(request.user)
+        products = Product.objects.filter(supplier=supplier_profile)
+        serializer = self.get_serializer(products, many=True)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def search_nearby(self, request):
@@ -287,19 +288,16 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
     
     def perform_create(self, serializer):
-        supplier_profile = SupplierProfile.objects.get(user=self.request.user)
+        supplier_profile = get_or_create_supplier_profile(self.request.user)
         serializer.save(supplier=supplier_profile)
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='my_equipment')
     def my_equipment(self, request):
-        """Get current supplier's equipment"""
-        try:
-            supplier_profile = SupplierProfile.objects.get(user=request.user)
-            equipment = Equipment.objects.filter(supplier=supplier_profile)
-            serializer = self.get_serializer(equipment, many=True)
-            return Response(serializer.data)
-        except SupplierProfile.DoesNotExist:
-            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        """Get current supplier's equipment - auto-creates profile if needed"""
+        supplier_profile = get_or_create_supplier_profile(request.user)
+        equipment = Equipment.objects.filter(supplier=supplier_profile)
+        serializer = self.get_serializer(equipment, many=True)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def search_nearby(self, request):
