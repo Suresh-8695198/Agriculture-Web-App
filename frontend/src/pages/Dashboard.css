@@ -5,14 +5,22 @@
 
 /* ─── Variables for Supplier Theme & Global ─── */
 :root {
-  --farmer-primary: #2D5016;
-  --supplier-primary: #8B6F47;
-  --consumer-primary: #5C8A3D;
+  /* Farmer Theme (Nature-Based) */
+  --farmer-primary: #2E7D32;
+  --farmer-accent: #8BC34A;
+  --farmer-bg: #F1F8E9;
   
-  --supplier-light: #A88B5E;
-  --supplier-dark: #6B5435;
-  --supplier-bg: #F9F7F2;
-  --supplier-gradient: linear-gradient(135deg, #8B6F47 0%, #C4A574 100%);
+  /* Supplier Theme (Earth + Trust) */
+  --supplier-primary: #5D4037;
+  --supplier-accent: #8D6E63;
+  --supplier-sidebar: #4E342E;
+  --supplier-bg: #F8F5F3;
+  --supplier-gradient: linear-gradient(135deg, #5D4037 0%, #8D6E63 100%);
+  
+  /* Consumer Theme (Market Feel) */
+  --consumer-primary: #388E3C;
+  --consumer-accent: #FFA000;
+  --consumer-bg: #FFFDF7;
   
   --glass-bg: rgba(255, 255, 255, 0.95);
   --glass-border: rgba(255, 255, 255, 0.6);

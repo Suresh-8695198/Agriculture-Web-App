@@ -48,6 +48,10 @@ INSTALLED_APPS = [
     'farmers',
     'suppliers',
     'consumers',
+    'finance',
+    'notifications',
+    'reports',
+    'support',
 ]
 
 MIDDLEWARE = [
@@ -175,4 +179,6 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+
 

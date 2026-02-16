@@ -21,20 +21,78 @@ class SupplierProfile(models.Model):
     license_number = models.CharField(max_length=100, blank=True)
     gst_number = models.CharField(max_length=15, blank=True)
     description = models.TextField(blank=True)
+    years_of_experience = models.IntegerField(default=0)
     
     # Address Details
+    address_line_1 = models.CharField(max_length=255, blank=True)
+    address_line_2 = models.CharField(max_length=255, blank=True)
     village = models.CharField(max_length=100, blank=True)
+    taluk = models.CharField(max_length=100, blank=True)
     district = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
     pin_code = models.CharField(max_length=6, blank=True)
+    landmark = models.CharField(max_length=200, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     
+    # Business Hours
+    opening_time = models.TimeField(null=True, blank=True)
+    closing_time = models.TimeField(null=True, blank=True)
+    working_days = models.CharField(max_length=200, blank=True, help_text="Comma-separated days: Mon,Tue,Wed...")
+    emergency_contact_available = models.BooleanField(default=False)
+
+    # Bank & Payment Details
+    bank_account_holder = models.CharField(max_length=200, blank=True)
+    bank_name = models.CharField(max_length=100, blank=True)
+    account_number = models.CharField(max_length=50, blank=True)
+    ifsc_code = models.CharField(max_length=20, blank=True)
+    upi_id = models.CharField(max_length=50, blank=True)
+    pan_number = models.CharField(max_length=20, blank=True)
+    is_bank_verified = models.BooleanField(default=False)
+
     # Business Type - stored as comma-separated values
     business_types = models.CharField(max_length=200, blank=True, help_text="Comma-separated: seeds,fertilizer,manure,equipment_rental")
     
+    # Service Category Settings (Toggles)
+    enable_seeds = models.BooleanField(default=False)
+    enable_fertilizers = models.BooleanField(default=False)
+    enable_manure = models.BooleanField(default=False)
+    enable_equipment_rental = models.BooleanField(default=False)
+    enable_agro_tools = models.BooleanField(default=False)
+
+    # Delivery & Service Options
+    home_delivery_available = models.BooleanField(default=False)
+    delivery_radius_km = models.IntegerField(default=0)
+    min_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    delivery_charges = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    pickup_available = models.BooleanField(default=True)
+
+    # Notification Preferences
+    notify_orders = models.BooleanField(default=True)
+    notify_rentals = models.BooleanField(default=True)
+    notify_payments = models.BooleanField(default=True)
+    notify_low_stock = models.BooleanField(default=True)
+    notify_sms = models.BooleanField(default=True)
+    notify_email = models.BooleanField(default=True)
+
     # Documents
     id_proof = models.FileField(upload_to='supplier_documents/id_proofs/', null=True, blank=True)
     business_license_doc = models.FileField(upload_to='supplier_documents/licenses/', null=True, blank=True)
+    gst_certificate = models.FileField(upload_to='supplier_documents/gst/', null=True, blank=True)
     shop_image = models.ImageField(upload_to='supplier_documents/shop_images/', null=True, blank=True)
+    equipment_registration = models.FileField(upload_to='supplier_documents/equipment/', null=True, blank=True)
+    
+    VERIFICATION_STATUS_CHOICES = (
+        ('pending', 'Pending Verification'),
+        ('verified', 'Verified'),
+        ('rejected', 'Rejected'),
+    )
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS_CHOICES, default='pending')
+    admin_comments = models.TextField(blank=True)
+
+    # Account Status
+    subscription_plan = models.CharField(max_length=50, default='Free')
+    commission_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     
     # Ratings
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
@@ -258,7 +316,8 @@ class Order(models.Model):
             # Generate unique order number
             import random
             import string
-            self.order_number = f"ORD-{self.created_at.strftime('%Y%m%d')}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+            from django.utils import timezone
+            self.order_number = f"ORD-{timezone.now().strftime('%Y%m%d')}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
         super().save(*args, **kwargs)
     
     def __str__(self):
@@ -338,7 +397,8 @@ class Rental(models.Model):
             # Generate unique rental number
             import random
             import string
-            self.rental_number = f"RNT-{self.created_at.strftime('%Y%m%d')}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
+            from django.utils import timezone
+            self.rental_number = f"RNT-{timezone.now().strftime('%Y%m%d')}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
         
         # Calculate rental duration
         if self.start_date and self.end_date:
@@ -367,3 +427,19 @@ class SupplierReview(models.Model):
     class Meta:
         ordering = ['-created_at']
         unique_together = ['supplier', 'reviewer']
+
+
+class ProductReview(models.Model):
+    """Reviews for products"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.rating} stars"
+    
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['product', 'reviewer']

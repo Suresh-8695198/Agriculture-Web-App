@@ -20,6 +20,11 @@ import OrdersManagement from './pages/supplier/OrdersManagement';
 import RentalsManagement from './pages/supplier/RentalsManagement';
 import InventoryManagement from './pages/supplier/InventoryManagement';
 import SupplierComingSoon from './pages/supplier/SupplierComingSoon';
+import PaymentsManagement from './pages/supplier/PaymentsManagement';
+import Notifications from './pages/supplier/Notifications';
+import ReviewsManagement from './pages/supplier/ReviewsManagement';
+import Reports from './pages/supplier/Reports';
+import Support from './pages/supplier/Support';
 
 import { FaClipboardList, FaCalendarCheck, FaWarehouse, FaMoneyBillWave, FaBell, FaStar, FaChartBar, FaQuestionCircle } from 'react-icons/fa';
 
@@ -119,15 +124,13 @@ const AppLayout = () => {
             </ProtectedRoute>
           }
         />
+
+
         <Route
           path="/supplier/payments"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon
-                title="Payments & Earnings"
-                subtitle="View your payments and earnings history"
-                icon={<FaMoneyBillWave />}
-              />
+              <PaymentsManagement />
             </ProtectedRoute>
           }
         />
@@ -135,11 +138,7 @@ const AppLayout = () => {
           path="/supplier/notifications"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon
-                title="Notifications"
-                subtitle="View all your notifications"
-                icon={<FaBell />}
-              />
+              <Notifications />
             </ProtectedRoute>
           }
         />
@@ -147,11 +146,7 @@ const AppLayout = () => {
           path="/supplier/reviews"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon
-                title="Ratings & Reviews"
-                subtitle="View customer ratings and reviews"
-                icon={<FaStar />}
-              />
+              <ReviewsManagement />
             </ProtectedRoute>
           }
         />
@@ -159,11 +154,7 @@ const AppLayout = () => {
           path="/supplier/reports"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon
-                title="Reports"
-                subtitle="Generate and view business reports"
-                icon={<FaChartBar />}
-              />
+              <Reports />
             </ProtectedRoute>
           }
         />
@@ -171,11 +162,7 @@ const AppLayout = () => {
           path="/supplier/support"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierComingSoon
-                title="Support / Help"
-                subtitle="Get help and support"
-                icon={<FaQuestionCircle />}
-              />
+              <Support />
             </ProtectedRoute>
           }
         />

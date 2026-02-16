@@ -1,12 +1,12 @@
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.db.models import Q, Sum, Count
+from django.db.models import Sum, Count, Q
 from django.utils import timezone
-from datetime import timedelta
 from math import radians, cos, sin, asin, sqrt
-from .models import SupplierProfile, Product, Equipment, Order, Rental, StockLog, SupplierReview
+
+from .models import SupplierProfile, Product, Equipment, Order, Rental, StockLog, SupplierReview, ProductReview
 from .serializers import (
     SupplierProfileSerializer, 
     SupplierProfileUpdateSerializer,
@@ -16,7 +16,8 @@ from .serializers import (
     OrderSerializer,
     RentalSerializer,
     StockLogSerializer,
-    SupplierReviewSerializer
+    SupplierReviewSerializer,
+    ProductReviewSerializer
 )
 
 
@@ -354,6 +355,18 @@ class SupplierReviewViewSet(viewsets.ModelViewSet):
         supplier.total_reviews = len(reviews)
         supplier.save()
 
+    @action(detail=False, methods=['get'])
+    def my_reviews(self, request):
+        """Get reviews for the current supplier"""
+        try:
+            supplier_profile = SupplierProfile.objects.get(user=request.user)
+            reviews = SupplierReview.objects.filter(supplier=supplier_profile)
+            serializer = self.get_serializer(reviews, many=True)
+            return Response(serializer.data)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
 
 class OrderViewSet(viewsets.ModelViewSet):
     """ViewSet for orders"""
@@ -588,3 +601,28 @@ class RentalViewSet(viewsets.ModelViewSet):
             return Response(stats)
         except SupplierProfile.DoesNotExist:
             return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ProductReviewViewSet(viewsets.ModelViewSet):
+    """ViewSet for product reviews"""
+    queryset = ProductReview.objects.all()
+    serializer_class = ProductReviewSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def perform_create(self, serializer):
+        serializer.save(reviewer=self.request.user)
+        
+    @action(detail=False, methods=['get'])
+    def my_product_reviews(self, request):
+        """Get reviews for all products of the current supplier"""
+        try:
+            supplier_profile = SupplierProfile.objects.get(user=request.user)
+            reviews = ProductReview.objects.filter(product__supplier=supplier_profile)
+            serializer = self.get_serializer(reviews, many=True)
+            return Response(serializer.data)
+        except SupplierProfile.DoesNotExist:
+            return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+

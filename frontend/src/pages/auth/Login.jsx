@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaUser, FaLock, FaSeedling, FaTruck, FaShoppingCart, FaExclamationTriangle, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaLock, FaLeaf, FaTractor, FaShoppingBasket, FaExclamationTriangle, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './Auth.css';
 
 const ROLE_META = {
-  farmer:   { icon: <FaSeedling />, label: 'Farmer',   color: 'farmer' },
-  supplier: { icon: <FaTruck />, label: 'Supplier', color: 'supplier' },
-  consumer: { icon: <FaShoppingCart />, label: 'Consumer', color: 'consumer' },
+  farmer: { icon: <FaLeaf />, label: 'Farmer', color: 'farmer' },
+  supplier: { icon: <FaTractor />, label: 'Supplier', color: 'supplier' },
+  consumer: { icon: <FaShoppingBasket />, label: 'Consumer', color: 'consumer' },
 };
 
 const Login = () => {
@@ -30,7 +30,7 @@ const Login = () => {
     try {
       const response = await login(username, password, role);
       toast.success('Login successful! Welcome back.');
-      
+
       // Redirect based on user role
       const userType = response.user.user_type;
       if (userType === 'farmer') {
@@ -45,7 +45,7 @@ const Login = () => {
     } catch (err) {
       console.error('Login error:', err);
       let msg = 'Invalid credentials. Please check your username and password.';
-      
+
       // Check for specific error messages from backend
       if (err.response?.data?.error) {
         msg = err.response.data.error;
@@ -54,7 +54,7 @@ const Login = () => {
       } else if (err.message) {
         msg = err.message;
       }
-      
+
       setError(msg);
       toast.error(msg);
     } finally {
@@ -74,11 +74,11 @@ const Login = () => {
           </p>
           <div className="auth-left-features">
             <div className="auth-feature-item">
-              <span className="auth-feature-icon"><FaSeedling /></span>
+              <span className="auth-feature-icon"><FaLeaf /></span>
               Direct farm-to-table marketplace
             </div>
             <div className="auth-feature-item">
-              <span className="auth-feature-icon"><FaTruck /></span>
+              <span className="auth-feature-icon"><FaTractor /></span>
               Reliable supply chain management
             </div>
             <div className="auth-feature-item">

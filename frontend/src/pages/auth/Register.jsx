@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaUser, FaEnvelope, FaPhone, FaLock, FaMapMarkerAlt, FaExclamationTriangle, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaMapMarkerAlt, FaExclamationTriangle, FaEye, FaEyeSlash, FaLeaf, FaTractor, FaShoppingBasket, FaChartLine } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './Auth.css';
 
@@ -100,9 +100,9 @@ const Register = () => {
   };
 
   const ROLE_META = {
-    farmer:   { icon: <FaUser />, label: 'Farmer',   color: 'farmer' },
-    supplier: { icon: <FaUser />, label: 'Supplier', color: 'supplier' },
-    consumer: { icon: <FaUser />, label: 'Consumer', color: 'consumer' },
+    farmer: { icon: <FaLeaf />, label: 'Farmer', color: 'farmer' },
+    supplier: { icon: <FaTractor />, label: 'Supplier', color: 'supplier' },
+    consumer: { icon: <FaShoppingBasket />, label: 'Consumer', color: 'consumer' },
   };
   const meta = ROLE_META[formData.user_type] || ROLE_META.farmer;
 
@@ -119,21 +119,21 @@ const Register = () => {
           <div className="auth-left-features">
             <div className="auth-feature-item">
               <span className="auth-feature-icon">
-                <FaUser />
+                <FaLeaf />
               </span>
               10,000+ farmers on the platform
             </div>
             <div className="auth-feature-item">
               <span className="auth-feature-icon">
-                <FaUser />
+                <FaTractor />
               </span>
               Verified suppliers & consumers
             </div>
             <div className="auth-feature-item">
               <span className="auth-feature-icon">
-                <FaLock />
+                <FaChartLine />
               </span>
-              Secure and encrypted data
+              Real-time analytics & insights
             </div>
           </div>
         </div>

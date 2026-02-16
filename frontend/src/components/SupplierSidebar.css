@@ -8,7 +8,7 @@
     left: 0;
     top: 0;
     height: 100vh;
-    background: linear-gradient(180deg, #8B6F47 0%, #7a5f3d 100%);
+    background: linear-gradient(180deg, #4E342E 0%, #3a2622 100%);
     color: white;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     width: 280px;
@@ -43,7 +43,7 @@
     top: 1rem;
     left: 1rem;
     z-index: 1001;
-    background: #8B6F47;
+    background: #5D4037;
     color: white;
     border: none;
     width: 45px;
@@ -59,7 +59,7 @@
 }
 
 .sidebar-toggle:hover {
-    background: #7a5f3d;
+    background: #3a2622;
     transform: translateY(-2px);
 }
 
@@ -68,9 +68,9 @@
     position: absolute;
     top: 50px;
     right: -15px; /* Hangs off the edge */
-    background: #F4C430; /* Solid Gold for visibility */
-    color: #8B6F47; /* Dark Brown for contrast */
-    border: 3px solid #8B6F47;
+    background: #FFB300; /* Solid Gold for visibility */
+    color: #4E342E; /* Dark Brown for contrast */
+    border: 3px solid #4E342E;
     width: 32px;
     height: 32px;
     border-radius: 50%; /* Circular */
@@ -117,7 +117,7 @@
 
 .logo-icon {
     font-size: 2rem;
-    color: #F4C430;
+    color: #FFB300;
 }
 
 .logo-text {
@@ -148,13 +148,13 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #F4C430 0%, #daa520 100%);
+    background: linear-gradient(135deg, #FFB300 0%, #FFA000 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     font-size: 1.1rem;
-    color: #8B6F47;
+    color: #4E342E;
 }
 
 .user-details {

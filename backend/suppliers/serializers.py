@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import SupplierProfile, Product, Equipment, Order, Rental, StockLog, SupplierReview
+from .models import SupplierProfile, Product, Equipment, Order, Rental, StockLog, SupplierReview, ProductReview
 from accounts.serializers import UserSerializer
 
 class SupplierProfileSerializer(serializers.ModelSerializer):
@@ -10,7 +10,9 @@ class SupplierProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupplierProfile
         fields = '__all__'
-        read_only_fields = ['rating', 'total_reviews', 'created_at', 'updated_at']
+        read_only_fields = ['rating', 'total_reviews', 'created_at', 'updated_at', 
+                          'verification_status', 'admin_comments', 'subscription_plan', 
+                          'commission_percentage', 'is_bank_verified']
     
     def get_business_types_list(self, obj):
         """Convert comma-separated business_types to list"""
@@ -179,6 +181,16 @@ class SupplierReviewSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = SupplierReview
+        fields = '__all__'
+        read_only_fields = ['created_at']
+
+
+class ProductReviewSerializer(serializers.ModelSerializer):
+    reviewer_name = serializers.CharField(source='reviewer.username', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    
+    class Meta:
+        model = ProductReview
         fields = '__all__'
         read_only_fields = ['created_at']
 
