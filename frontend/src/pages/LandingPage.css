@@ -18,7 +18,7 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 15px 35px rgba(46, 125, 50, 0.25);
+  --shadow-glow: 0 10px 20px rgba(0, 0, 0, 0.1);
   --radius-lg: 24px;
   --radius-md: 16px;
 }
@@ -146,22 +146,23 @@
 }
 
 .brand-logo {
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
-  border-radius: 12px;
+  height: 65px;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+
+.brand-logo .navbar-logo-img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+}
+
 .landing-nav:hover .brand-logo {
-  transform: rotate(10deg) scale(1.05);
-  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.3);
+  transform: scale(1.05);
 }
 
 .landing-nav-title {
@@ -304,13 +305,13 @@
 .landing-nav-link.filled {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
-  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: none;
 }
 
 .landing-nav-link.filled:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
 }
 
 .landing-nav-link.filled::after {
@@ -466,13 +467,13 @@
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
 
 .btn-primary-glow:hover {
   transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(46, 125, 50, 0.35);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
 .btn-secondary-outline {
@@ -1128,7 +1129,7 @@
 
 .portal-card.farmer::before { background: var(--primary); }
 .portal-card.supplier::before { background: var(--accent-brown); }
-.portal-card.consumer::before { background: var(--primary); } /* Market Green */
+.portal-card.consumer::before { background: var(--accent-orange); } /* Market Orange */
 
 .portal-card:hover::before { height: 10px; }
 
@@ -1148,7 +1149,7 @@
 
 .portal-icon-wrapper.farmer { background: #E8F5E9; color: var(--primary); }
 .portal-icon-wrapper.supplier { background: #EFEBE9; color: var(--accent-brown); }
-.portal-icon-wrapper.consumer { background: #E8F5E9; color: var(--primary); }
+.portal-icon-wrapper.consumer { background: #FFF3E0; color: var(--accent-orange); }
 
 .portal-card h3 { font-size: 1.5rem; margin-bottom: 12px; color: var(--text-main); }
 .portal-card p { color: var(--text-body); font-size: 0.95rem; margin-bottom: 30px; line-height: 1.6; }
@@ -1168,9 +1169,9 @@
   justify-content: center;
 }
 
-.portal-btn.farmer { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3); }
-.portal-btn.supplier { background: var(--accent-brown); color: white; box-shadow: 0 4px 15px rgba(93, 64, 55, 0.3); }
-.portal-btn.consumer { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3); }
+.portal-btn.farmer { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+.portal-btn.supplier { background: var(--accent-brown); color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+.portal-btn.consumer { background: var(--accent-orange); color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
 
 .portal-btn:hover { transform: translateY(-3px); filter: brightness(1.1); }
 
@@ -1364,7 +1365,7 @@
 /* ─── FOOTER ─── */
 .main-footer {
   padding: 60px 3% 40px;
-  background: #3E2723;
+  background: #382520;
   color: white;
 }
 
@@ -1865,7 +1866,6 @@
     border: 1px solid rgba(0,0,0,0.03);
     box-shadow: 0 4px 20px rgba(0,0,0,0.02);
     transition: all 0.3s ease;
-    overflow: hidden;
     text-align: left;
 }
 
@@ -1916,15 +1916,20 @@
     height: 70px;
     border-radius: 50%;
     overflow: hidden;
-    border: 4px solid white;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    border: 3px solid white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     margin-bottom: 12px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
+    background: #f1f5f9;
 }
 
 .profile-img-container img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 .profile-info {

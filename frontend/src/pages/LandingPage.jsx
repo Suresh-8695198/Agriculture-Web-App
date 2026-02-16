@@ -81,12 +81,12 @@ const LandingPage = () => {
     ...item,
     icon: index % 2 === 0 ? <SketchFarmer /> : <SketchTractor />, // Fallback icons
     companyLogo: [
-      "https://img.icons8.com/color/48/toyota.png",
-      "https://img.icons8.com/color/48/mahindra.png",
-      "https://img.icons8.com/color/48/bigbasket.png",
+      "https://img.icons8.com/color/48/amazon.png",
       "https://img.icons8.com/color/48/dhl.png",
       "https://img.icons8.com/color/48/google-logo.png",
-      "https://img.icons8.com/color/48/microsoft.png"
+      "https://img.icons8.com/color/48/microsoft.png",
+      "https://img.icons8.com/color/48/facebook-new.png",
+      "https://img.icons8.com/color/48/twitter--v1.png"
     ][index % 6]
   }));
 
@@ -231,10 +231,7 @@ const LandingPage = () => {
           <div className="portal-grid">
             {/* Farmer Card */}
             <div className="portal-card farmer sketch-border">
-              <div className="portal-badge-popular">
-                Recommended
-                <SketchCircle className="sketch-circle-deco" style={{ width: '110%', color: 'white', opacity: 1 }} />
-              </div>
+
               <div className="portal-icon-wrapper farmer">
                 <SketchFarmer style={{ fontSize: '3rem' }} />
               </div>
@@ -252,7 +249,7 @@ const LandingPage = () => {
             <div className="portal-card supplier sketch-border">
               <div className="portal-icon-wrapper supplier">
                 <FaTractor />
-                <SketchScribble className="sketch-deco" style={{ position: 'absolute', bottom: -10, left: '20%', width: 60, color: 'var(--accent-brown)', opacity: 0.3 }} />
+
               </div>
               <h3 className="sketch-font">{t.portals.supplierTitle}</h3>
               <p>{t.portals.supplierDesc}</p>
@@ -270,7 +267,7 @@ const LandingPage = () => {
                 <FaShoppingBasket />
               </div>
               <h3 className="sketch-font">{t.portals.consumerTitle}</h3>
-              <p>{t.portals.consumerDesc} <SketchStar style={{ width: 20, color: '#f59e0b' }} /></p>
+              <p>{t.portals.consumerDesc}</p>
               <Link to="/login?role=consumer" className="landing-nav-link filled portal-btn consumer" style={{ width: 'auto' }}>
                 {t.portals.consumerLogin} <FaSignInAlt />
               </Link>
@@ -393,7 +390,7 @@ const LandingPage = () => {
             {t.howItWorks.title} <span className="sketch-circle-wrapper">{t.nav.brand} <SketchCircle className="sketch-circle-deco" style={{ color: 'var(--primary)', opacity: 0.6 }} /></span> {t.howItWorks.titleMid}
           </h2>
           <p className="section-subtitle">{t.howItWorks.subtitle}</p>
-          <SketchScribble className="sketch-deco" style={{ width: 100, color: 'var(--primary)', opacity: 0.2, margin: '0 auto' }} />
+
         </div>
 
         <div className="flow-container">

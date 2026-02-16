@@ -39,11 +39,11 @@
 }
 
 .navbar-logo-img {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.15);
+  width: 45px;
+  height: 45px;
+  border-radius: 0;
+  object-fit: contain;
+  box-shadow: none;
 }
 
 .navbar-brand-text {
