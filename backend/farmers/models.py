@@ -87,3 +87,46 @@ class SupplierOrder(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+
+
+class Land(models.Model):
+    """Land/Field details for farmers"""
+    
+    SOIL_TYPE_CHOICES = (
+        ('loamy', 'Loamy'),
+        ('clay', 'Clay'),
+        ('sandy', 'Sandy'),
+        ('silt', 'Silt'),
+        ('peaty', 'Peaty'),
+        ('chalky', 'Chalky'),
+    )
+    
+    IRRIGATION_CHOICES = (
+        ('canal', 'Canal'),
+        ('well', 'Well'),
+        ('borewell', 'Borewell'),
+        ('drip', 'Drip Irrigation'),
+        ('sprinkler', 'Sprinkler'),
+        ('rainfed', 'Rainfed'),
+    )
+    
+    farmer = models.ForeignKey(FarmerProfile, on_delete=models.CASCADE, related_name='lands')
+    name = models.CharField(max_length=200, help_text="Field name (e.g., North Field)")
+    area = models.DecimalField(max_digits=10, decimal_places=2, help_text="Area in acres")
+    location = models.CharField(max_length=300, help_text="Village, District")
+    soil_type = models.CharField(max_length=50, choices=SOIL_TYPE_CHOICES)
+    current_crop = models.CharField(max_length=200, blank=True, help_text="Current crop being grown")
+    irrigation_type = models.CharField(max_length=50, choices=IRRIGATION_CHOICES, default='rainfed')
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    notes = models.TextField(blank=True, help_text="Additional notes about the land")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.name} - {self.farmer.user.username} ({self.area} acres)"
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Land"
+        verbose_name_plural = "Lands"

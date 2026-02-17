@@ -145,6 +145,74 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
         
         serializer = SupplierDashboardSerializer(stats)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='search_nearby')
+    def search_nearby(self, request):
+        """Search suppliers by location with distance calculation"""
+        latitude = request.query_params.get('latitude')
+        longitude = request.query_params.get('longitude')
+        max_distance = float(request.query_params.get('max_distance', 50))  # km
+        business_type = request.query_params.get('business_type')  # Optional filter
+        
+        if not latitude or not longitude:
+            # If no location provided, return all suppliers
+            suppliers = SupplierProfile.objects.filter(
+                is_active=True,
+                verification_status='verified'
+            ).select_related('user')
+            
+            if business_type:
+                suppliers = suppliers.filter(business_types__icontains=business_type)
+            
+            serializer = self.get_serializer(suppliers, many=True)
+            return Response(serializer.data)
+        
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'Invalid latitude or longitude format'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get all verified active suppliers
+        suppliers = SupplierProfile.objects.filter(
+            is_active=True,
+            verification_status='verified'
+        ).select_related('user')
+        
+        # Filter by business type if provided
+        if business_type:
+            suppliers = suppliers.filter(business_types__icontains=business_type)
+        
+        # Calculate distance for each supplier
+        nearby_suppliers = []
+        for supplier in suppliers:
+            # Use supplier's lat/long if available, otherwise use user's lat/long
+            supplier_lat = supplier.latitude if supplier.latitude else (
+                supplier.user.latitude if hasattr(supplier.user, 'latitude') else None
+            )
+            supplier_lon = supplier.longitude if supplier.longitude else (
+                supplier.user.longitude if hasattr(supplier.user, 'longitude') else None
+            )
+            
+            if supplier_lat and supplier_lon:
+                distance = haversine(
+                    longitude, latitude,
+                    float(supplier_lon),
+                    float(supplier_lat)
+                )
+                
+                if distance <= max_distance:
+                    supplier_data = self.get_serializer(supplier).data
+                    supplier_data['distance_km'] = round(distance, 2)
+                    nearby_suppliers.append(supplier_data)
+        
+        # Sort by distance
+        nearby_suppliers.sort(key=lambda x: x['distance_km'])
+        
+        return Response(nearby_suppliers)
 
 
 class ProductViewSet(viewsets.ModelViewSet):

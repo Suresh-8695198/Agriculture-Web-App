@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import FarmerProfile, FarmProduce, SupplierOrder
+from .models import FarmerProfile, FarmProduce, SupplierOrder, Land
 
 @admin.register(FarmerProfile)
 class FarmerProfileAdmin(admin.ModelAdmin):
@@ -21,3 +21,26 @@ class SupplierOrderAdmin(admin.ModelAdmin):
     list_filter = ['status', 'is_rental', 'created_at']
     search_fields = ['farmer__user__username', 'product__name']
     readonly_fields = ['created_at', 'updated_at']
+
+@admin.register(Land)
+class LandAdmin(admin.ModelAdmin):
+    list_display = ['name', 'farmer', 'area', 'location', 'soil_type', 'current_crop', 'created_at']
+    list_filter = ['soil_type', 'irrigation_type', 'created_at']
+    search_fields = ['name', 'location', 'farmer__user__username', 'current_crop']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('farmer', 'name', 'area', 'location')
+        }),
+        ('Land Details', {
+            'fields': ('soil_type', 'current_crop', 'irrigation_type')
+        }),
+        ('Location Coordinates', {
+            'fields': ('latitude', 'longitude'),
+            'classes': ('collapse',)
+        }),
+        ('Additional Information', {
+            'fields': ('notes', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )

@@ -2,9 +2,10 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import serializers as rest_serializers
 from math import radians, cos, sin, asin, sqrt
-from .models import FarmerProfile, FarmProduce, SupplierOrder
-from .serializers import FarmerProfileSerializer, FarmProduceSerializer, SupplierOrderSerializer
+from .models import FarmerProfile, FarmProduce, SupplierOrder, Land
+from .serializers import FarmerProfileSerializer, FarmProduceSerializer, SupplierOrderSerializer, LandSerializer
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -147,3 +148,66 @@ class SupplierOrderViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(order)
         return Response(serializer.data)
+
+
+class LandViewSet(viewsets.ModelViewSet):
+    """ViewSet for land/field management"""
+    queryset = Land.objects.all()
+    serializer_class = LandSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'location', 'soil_type', 'current_crop']
+    ordering_fields = ['area', 'created_at']
+    
+    def get_queryset(self):
+        """Get lands for the current farmer"""
+        user = self.request.user
+        if hasattr(user, 'farmer_profile'):
+            return Land.objects.filter(farmer=user.farmer_profile)
+        return Land.objects.none()
+    
+    def perform_create(self, serializer):
+        """Create land with automatic farmer assignment"""
+        try:
+            farmer_profile = FarmerProfile.objects.get(user=self.request.user)
+            serializer.save(farmer=farmer_profile)
+        except FarmerProfile.DoesNotExist:
+            raise rest_serializers.ValidationError("Farmer profile not found. Please create a farmer profile first.")
+    
+    @action(detail=False, methods=['get'])
+    def my_lands(self, request):
+        """Get all lands for the current farmer"""
+        try:
+            farmer_profile = FarmerProfile.objects.get(user=request.user)
+            lands = Land.objects.filter(farmer=farmer_profile)
+            serializer = self.get_serializer(lands, many=True)
+            return Response(serializer.data)
+        except FarmerProfile.DoesNotExist:
+            return Response({'error': 'Farmer profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Get land statistics for the current farmer"""
+        try:
+            farmer_profile = FarmerProfile.objects.get(user=request.user)
+            lands = Land.objects.filter(farmer=farmer_profile)
+            
+            total_area = sum(float(land.area) for land in lands)
+            total_lands = lands.count()
+            
+            # Group by soil type
+            soil_types = {}
+            for land in lands:
+                soil_type = land.get_soil_type_display()
+                if soil_type in soil_types:
+                    soil_types[soil_type] += 1
+                else:
+                    soil_types[soil_type] = 1
+            
+            return Response({
+                'total_lands': total_lands,
+                'total_area': total_area,
+                'soil_types': soil_types
+            })
+        except FarmerProfile.DoesNotExist:
+            return Response({'error': 'Farmer profile not found'}, status=status.HTTP_404_NOT_FOUND)
