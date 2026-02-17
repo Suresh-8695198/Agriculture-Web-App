@@ -16,6 +16,9 @@ router.register(r'reviews/product', ProductReviewViewSet, basename='product-revi
 urlpatterns = [
     # Explicit paths for custom actions (these take precedence)
     # Profile endpoints
+    path('profiles/me/', 
+         SupplierProfileViewSet.as_view({'get': 'my_profile', 'patch': 'update_profile', 'put': 'update_profile'}), 
+         name='supplier-profile-me'),
     path('profiles/my_profile/', 
          SupplierProfileViewSet.as_view({'get': 'my_profile'}), 
          name='supplier-my-profile'),

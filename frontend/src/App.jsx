@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from './components/Navbar';
@@ -10,6 +10,19 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import FarmerDashboard from './pages/FarmerDashboard';
 import ConsumerDashboard from './pages/ConsumerDashboard';
+
+// Farmer Portal Layout & Pages
+import FarmerLayout from './pages/FarmerLayout';
+import FarmerProfile from './pages/FarmerProfile';
+import LandDetails from './pages/farmer/LandDetails';
+import SearchSupplier from './pages/farmer/SearchSupplier';
+import BuyProducts from './pages/farmer/BuyProducts';
+import RentEquipment from './pages/farmer/RentEquipment';
+import SellProduce from './pages/farmer/SellProduce';
+import OrderTracking from './pages/farmer/OrderTracking';
+import Wallet from './pages/farmer/Wallet';
+import FarmerNotifications from './pages/farmer/FarmerNotifications';
+import FarmerSupport from './pages/farmer/FarmerSupport';
 
 // Supplier Portal Pages
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
@@ -32,7 +45,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 /* Pages that should hide the global Navbar */
-const NO_NAVBAR_PATHS = ['/', '/login', '/register', '/supplier'];
+const NO_NAVBAR_PATHS = ['/', '/login', '/register', '/supplier', '/farmer'];
 
 const AppLayout = () => {
   const location = useLocation();
@@ -40,7 +53,8 @@ const AppLayout = () => {
     (p) => location.pathname === p ||
       location.pathname.startsWith('/login') ||
       location.pathname.startsWith('/register') ||
-      location.pathname.startsWith('/supplier')
+      location.pathname.startsWith('/supplier') ||
+      location.pathname.startsWith('/farmer')
   );
 
   return (
@@ -57,15 +71,51 @@ const AppLayout = () => {
         {/* Home (logged‑in hub) */}
         <Route path="/home" element={<Home />} />
 
-        {/* Protected Routes */}
+        {/* Farmer Portal Routes - NEW LAYOUT WITH SIDEBAR */}
         <Route
-          path="/farmer/dashboard"
+          path="/farmer"
           element={
             <ProtectedRoute role="farmer">
-              <FarmerDashboard />
+              <FarmerLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          {/* Default redirect to dashboard */}
+          <Route index element={<Navigate to="dashboard" replace />} />
+          
+          {/* Dashboard */}
+          <Route path="dashboard" element={<FarmerDashboard />} />
+          
+          {/* Profile */}
+          <Route path="profile" element={<FarmerProfile />} />
+          
+          {/* Land Management */}
+          <Route path="land-details" element={<LandDetails />} />
+          
+          {/* Supplier Search */}
+          <Route path="search-supplier" element={<SearchSupplier />} />
+          
+          {/* Shopping */}
+          <Route path="buy-products" element={<BuyProducts />} />
+          
+          {/* Equipment Rental */}
+          <Route path="rent-equipment" element={<RentEquipment />} />
+          
+          {/* Sell Crops */}
+          <Route path="sell-produce" element={<SellProduce />} />
+          
+          {/* Orders */}
+          <Route path="orders" element={<OrderTracking />} />
+          
+          {/* Wallet */}
+          <Route path="wallet" element={<Wallet />} />
+          
+          {/* Notifications */}
+          <Route path="notifications" element={<FarmerNotifications />} />
+          
+          {/* Support */}
+          <Route path="support" element={<FarmerSupport />} />
+        </Route>
 
         {/* Supplier Portal Routes */}
         <Route

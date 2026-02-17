@@ -3,6 +3,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap');
 
 :root {
   --primary: #2E7D32;
@@ -1720,8 +1721,6 @@
 }
 
 /* Custom "Sketch" style font for specific headings */
-@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap');
-
 .sketch-font {
   font-family: 'Architects Daughter', cursive;
 }

@@ -1,269 +1,187 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { FaSeedling, FaChartLine, FaBoxOpen, FaUsers, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCalendar, FaMoneyBillWave, FaSave, FaTimes } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaSeedling, FaChartLine, FaBoxOpen, FaUsers, FaTractor, FaShoppingCart, FaWallet, FaClipboardList } from 'react-icons/fa';
+import { MdDashboard } from 'react-icons/md';
 import { toast } from 'react-toastify';
-import api from '../api/axios';
-import './Dashboard.css';
+import './farmer/FarmerPages.css';
 
 const FarmerDashboard = () => {
-    const { user, setUser } = useAuth();
-    const [isEditing, setIsEditing] = useState(false);
-    const [editData, setEditData] = useState({});
-    const [saving, setSaving] = useState(false);
-    const [stats, setStats] = useState({
-        totalProduce: 0,
-        activeListings: 0,
-        totalOrders: 0,
-        monthlyRevenue: 0
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const [stats] = useState({
+        totalProduce: 5,
+        activeListings: 3,
+        totalOrders: 12,
+        monthlyRevenue: 15750
     });
 
-    const handleEditClick = () => {
-        setEditData({
-            username: user.username,
-            email: user.email,
-            phone_number: user.phone_number,
-            address: user.address || ''
-        });
-        setIsEditing(true);
-    };
-
-    const handleCancelEdit = () => {
-        setIsEditing(false);
-        setEditData({});
-    };
-
-    const handleChange = (e) => {
-        setEditData({ ...editData, [e.target.name]: e.target.value });
-    };
-
-    const handleSaveProfile = async () => {
-        setSaving(true);
-        try {
-            const response = await api.patch('accounts/profile/', editData);
-            setUser(response.data);
-            setIsEditing(false);
-            toast.success('Profile updated successfully!');
-        } catch (error) {
-            console.error('Profile update error:', error);
-            toast.error('Failed to update profile. Please try again.');
-        } finally {
-            setSaving(false);
-        }
+    const handleQuickAction = (path) => {
+        navigate(path);
     };
 
     if (!user) {
         return (
-            <div className="dashboard-loading">
-                <div className="loading-spinner"></div>
-                <p>Loading your dashboard...</p>
+            <div className="farmer-content-container">
+                <div className="farmer-page-header">
+                    <h1 className="farmer-page-title">Loading...</h1>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="dashboard-container">
-            {/* Header Section */}
-            <div className="dashboard-header">
-                <div className="header-content">
-                    <div className="header-left">
-                        <div className="user-avatar farmer-avatar">
-                            <FaSeedling />
-                        </div>
-                        <div className="user-info">
-                            <h1>Welcome back, {user?.username}!</h1>
-                            <p className="user-role farmer-role">
-                                <FaSeedling /> Farmer Portal
-                            </p>
-                        </div>
-                    </div>
-                    <div className="header-right">
-                        <button className="btn-action farmer-btn">
-                            <FaSeedling /> Add New Produce
-                        </button>
-                    </div>
-                </div>
+        <div className="farmer-content-container">
+            {/* Welcome Header */}
+            <div className="farmer-page-header">
+                <h1 className="farmer-page-title">
+                    <MdDashboard style={{ color: '#43A047' }} />
+                    Welcome back, {user?.username}!
+                </h1>
+                <p className="farmer-page-description">
+                    Here's what's happening with your farm today
+                </p>
             </div>
 
             {/* Stats Grid */}
-            <div className="stats-grid">
-                <div className="stat-card farmer-card">
-                    <div className="stat-icon farmer-icon">
+            <div className="farmer-grid">
+                <div className="farmer-card stat-card-dashboard">
+                    <div className="stat-card-icon produce">
                         <FaBoxOpen />
                     </div>
-                    <div className="stat-content">
+                    <div className="stat-card-content">
                         <h3>{stats.totalProduce}</h3>
                         <p>Total Produce</p>
                     </div>
                 </div>
-                <div className="stat-card farmer-card">
-                    <div className="stat-icon farmer-icon">
+                <div className="farmer-card stat-card-dashboard">
+                    <div className="stat-card-icon listings">
                         <FaChartLine />
                     </div>
-                    <div className="stat-content">
+                    <div className="stat-card-content">
                         <h3>{stats.activeListings}</h3>
                         <p>Active Listings</p>
                     </div>
                 </div>
-                <div className="stat-card farmer-card">
-                    <div className="stat-icon farmer-icon">
-                        <FaUsers />
+                <div className="farmer-card stat-card-dashboard">
+                    <div className="stat-card-icon orders">
+                        <FaClipboardList />
                     </div>
-                    <div className="stat-content">
+                    <div className="stat-card-content">
                         <h3>{stats.totalOrders}</h3>
                         <p>Total Orders</p>
                     </div>
                 </div>
-                <div className="stat-card farmer-card">
-                    <div className="stat-icon farmer-icon">
-                        <FaMoneyBillWave />
+                <div className="farmer-card stat-card-dashboard">
+                    <div className="stat-card-icon revenue">
+                        <FaWallet />
                     </div>
-                    <div className="stat-content">
-                        <h3>₹{stats.monthlyRevenue}</h3>
+                    <div className="stat-card-content">
+                        <h3>₹{stats.monthlyRevenue.toLocaleString()}</h3>
                         <p>Monthly Revenue</p>
                     </div>
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="dashboard-content">
-                {/* Profile Card */}
-                <div className="content-card profile-card">
-                    <div className="card-header farmer-header">
-                        <h2>
-                            <FaSeedling /> Your Farm Profile
-                        </h2>
-                        {!isEditing ? (
-                            <button className="btn-link" onClick={handleEditClick}>Edit Profile</button>
-                        ) : (
-                            <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                <button className="btn-save" onClick={handleSaveProfile} disabled={saving}>
-                                    <FaSave /> {saving ? 'Saving...' : 'Save'}
-                                </button>
-                                <button className="btn-cancel" onClick={handleCancelEdit} disabled={saving}>
-                                    <FaTimes /> Cancel
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                    <div className="card-body">
-                        {!isEditing ? (
-                            <div className="profile-grid">
-                                <div className="profile-item">
-                                    <span className="profile-label">Username:</span>
-                                    <span className="profile-value">{user.username}</span>
-                                </div>
-                                <div className="profile-item">
-                                    <span className="profile-label">
-                                        <FaEnvelope /> Email:
-                                    </span>
-                                    <span className="profile-value">{user.email}</span>
-                                </div>
-                                <div className="profile-item">
-                                    <span className="profile-label">
-                                        <FaPhone /> Phone:
-                                    </span>
-                                    <span className="profile-value">{user.phone_number}</span>
-                                </div>
-                                <div className="profile-item">
-                                    <span className="profile-label">
-                                        <FaMapMarkerAlt /> Location:
-                                    </span>
-                                    <span className="profile-value">{user.address || 'Not set'}</span>
-                                </div>
-                                <div className="profile-item">
-                                    <span className="profile-label">
-                                        <FaCalendar /> Member Since:
-                                    </span>
-                                    <span className="profile-value">
-                                        {new Date(user.created_at).toLocaleDateString()}
-                                    </span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="profile-edit-form">
-                                <div className="form-field">
-                                    <label>Username:</label>
-                                    <input
-                                        type="text"
-                                        name="username"
-                                        value={editData.username}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
-                                </div>
-                                <div className="form-field">
-                                    <label><FaEnvelope /> Email:</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={editData.email}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
-                                </div>
-                                <div className="form-field">
-                                    <label><FaPhone /> Phone:</label>
-                                    <input
-                                        type="tel"
-                                        name="phone_number"
-                                        value={editData.phone_number}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
-                                </div>
-                                <div className="form-field full-width">
-                                    <label><FaMapMarkerAlt /> Location:</label>
-                                    <textarea
-                                        name="address"
-                                        value={editData.address}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                        rows="3"
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
+            {/* Quick Actions */}
+            <div className="dashboard-section">
+                <h2 className="section-title">Quick Actions</h2>
+                <div className="quick-actions-grid">
+                    <button 
+                        className="quick-action-card"
+                        onClick={() => handleQuickAction('/farmer/sell-produce')}
+                    >
+                        <div className="action-icon add-produce">
+                            <FaSeedling />
+                        </div>
+                        <h3>Add New Produce</h3>
+                        <p>List your crops for sale</p>
+                    </button>
+                    <button 
+                        className="quick-action-card"
+                        onClick={() => handleQuickAction('/farmer/buy-products')}
+                    >
+                        <div className="action-icon buy-products">
+                            <FaShoppingCart />
+                        </div>
+                        <h3>Buy Products</h3>
+                        <p>Purchase seeds & fertilizers</p>
+                    </button>
+                    <button 
+                        className="quick-action-card"
+                        onClick={() => handleQuickAction('/farmer/rent-equipment')}
+                    >
+                        <div className="action-icon rent-equipment">
+                            <FaTractor />
+                        </div>
+                        <h3>Rent Equipment</h3>
+                        <p>Book tractors & machinery</p>
+                    </button>
+                    <button 
+                        className="quick-action-card"
+                        onClick={() => handleQuickAction('/farmer/search-supplier')}
+                    >
+                        <div className="action-icon find-suppliers">
+                            <FaUsers />
+                        </div>
+                        <h3>Find Suppliers</h3>
+                        <p>Search nearby suppliers</p>
+                    </button>
                 </div>
+            </div>
 
-                {/* Quick Actions */}
-                <div className="content-card actions-card">
-                    <div className="card-header farmer-header">
-                        <h2>Quick Actions</h2>
-                    </div>
-                    <div className="card-body">
-                        <div className="action-grid">
-                            <button className="action-button farmer-action">
-                                <FaSeedling />
-                                <span>Add Produce</span>
-                            </button>
-                            <button className="action-button farmer-action">
+            {/* Recent Activity & Profile Summary */}
+            <div className="dashboard-bottom-grid">
+                <div className="farmer-card dashboard-activity-card">
+                    <h2 className="section-title">Recent Activity</h2>
+                    <div className="activity-list">
+                        <div className="activity-item">
+                            <div className="activity-icon success">
                                 <FaBoxOpen />
-                                <span>View Inventory</span>
-                            </button>
-                            <button className="action-button farmer-action">
-                                <FaUsers />
-                                <span>Find Suppliers</span>
-                            </button>
-                            <button className="action-button farmer-action">
-                                <FaChartLine />
-                                <span>View Analytics</span>
-                            </button>
+                            </div>
+                            <div className="activity-details">
+                                <p className="activity-title">Order Delivered</p>
+                                <p className="activity-time">2 hours ago</p>
+                            </div>
+                        </div>
+                        <div className="activity-item">
+                            <div className="activity-icon info">
+                                <FaTractor />
+                            </div>
+                            <div className="activity-details">
+                                <p className="activity-title">Tractor Booking Confirmed</p>
+                                <p className="activity-time">5 hours ago</p>
+                            </div>
+                        </div>
+                        <div className="activity-item">
+                            <div className="activity-icon success">
+                                <FaWallet />
+                            </div>
+                            <div className="activity-details">
+                                <p className="activity-title">Payment Received</p>
+                                <p className="activity-time">1 day ago</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Recent Activity */}
-                <div className="content-card activity-card">
-                    <div className="card-header farmer-header">
-                        <h2>Recent Activity</h2>
-                    </div>
-                    <div className="card-body">
-                        <div className="empty-state">
-                            <FaChartLine />
-                            <p>No recent activity yet</p>
-                            <p className="text-muted">Start adding produce to see your activity here</p>
+                <div className="farmer-card dashboard-profile-summary">
+                    <h2 className="section-title">Profile Summary</h2>
+                    <div className="profile-summary-content">
+                        <div className="profile-summary-avatar">
+                            {user?.username?.charAt(0).toUpperCase() || 'F'}
                         </div>
+                        <div className="profile-summary-info">
+                            <h3>{user?.username}</h3>
+                            <p>{user?.email}</p>
+                            <p>{user?.phone_number || 'Phone not set'}</p>
+                        </div>
+                        <button 
+                            className="farmer-btn-secondary"
+                            onClick={() => handleQuickAction('/farmer/profile')}
+                        >
+                            Edit Profile
+                        </button>
                     </div>
                 </div>
             </div>

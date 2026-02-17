@@ -81,13 +81,29 @@ const SupplierProfile = () => {
     const handleSaveChanges = async () => {
         try {
             setSaving(true);
-            await api.patch('/suppliers/profiles/me/', formData);
+            
+            // Filter out file fields - they should only be uploaded via separate file upload handler
+            const fileFields = ['id_proof', 'business_license_doc', 'gst_certificate', 
+                               'shop_image', 'equipment_registration'];
+            
+            const dataToSend = { ...formData };
+            fileFields.forEach(field => {
+                // Remove file fields if they're URLs (strings) not actual File objects
+                if (dataToSend[field] && typeof dataToSend[field] === 'string') {
+                    delete dataToSend[field];
+                }
+            });
+            
+            await api.patch('/suppliers/profiles/me/', dataToSend);
             toast.success('Profile updated successfully');
             setProfile(formData);
             handleCloseModal();
         } catch (error) {
             console.error('Save failed:', error);
-            toast.error('Failed to save changes');
+            const errorMsg = error.response?.data?.details 
+                ? JSON.stringify(error.response.data.details) 
+                : 'Failed to save changes';
+            toast.error(errorMsg);
         } finally {
             setSaving(false);
         }
@@ -131,7 +147,10 @@ const SupplierProfile = () => {
                         <div className="form-group full-width">
                             <button className="btn-secondary-supplier" type="button" onClick={() => {
                                 navigator.geolocation.getCurrentPosition(pos => {
-                                    setFormData(prev => ({ ...prev, latitude: pos.coords.latitude, longitude: pos.coords.longitude }));
+                                    // Round to 6 decimal places to fit database constraints (max_digits=9, decimal_places=6)
+                                    const lat = Math.round(pos.coords.latitude * 1000000) / 1000000;
+                                    const lon = Math.round(pos.coords.longitude * 1000000) / 1000000;
+                                    setFormData(prev => ({ ...prev, latitude: lat, longitude: lon }));
                                     toast.success("Location detected!");
                                 }, err => toast.error("Could not detect location"));
                             }}>

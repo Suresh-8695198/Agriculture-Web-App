@@ -1,0 +1,127 @@
+/* ═══════════════════════════════════════════════════════════
+   FARMER LAYOUT STYLES
+   ═══════════════════════════════════════════════════════════ */
+
+.farmer-layout {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #F1F8F4 0%, #E8F5E9 100%);
+}
+
+.farmer-main-content {
+    flex: 1;
+    margin-left: 320px;
+    padding: 2rem;
+    transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 100vh;
+}
+
+/* When sidebar is closed */
+.farmer-sidebar.closed ~ .farmer-main-content {
+    margin-left: 85px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .farmer-main-content {
+        margin-left: 0;
+        padding: 1.5rem 1rem;
+    }
+    
+    .farmer-sidebar.closed ~ .farmer-main-content {
+        margin-left: 0;
+    }
+}
+
+/* Content Container */
+.farmer-content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Page Header Styles */
+.farmer-page-header {
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(46, 125, 50, 0.08);
+    border: 1px solid rgba(46, 125, 50, 0.1);
+}
+
+.farmer-page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1B5E20;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.farmer-page-description {
+    font-size: 1rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Card Styles */
+.farmer-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(46, 125, 50, 0.1);
+    transition: all 0.3s;
+}
+
+.farmer-card:hover {
+    box-shadow: 0 6px 25px rgba(46, 125, 50, 0.12);
+    transform: translateY(-2px);
+}
+
+/* Grid Layout */
+.farmer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Buttons */
+.farmer-btn-primary {
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(135deg, #43A047, #66BB6A);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+}
+
+.farmer-btn-primary:hover {
+    background: linear-gradient(135deg, #2E7D32, #43A047);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(67, 160, 71, 0.3);
+}
+
+.farmer-btn-secondary {
+    padding: 0.8rem 1.5rem;
+    background: white;
+    color: #43A047;
+    border: 2px solid #43A047;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+}
+
+.farmer-btn-secondary:hover {
+    background: #43A047;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(67, 160, 71, 0.2);
+}

@@ -77,7 +77,15 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
         """Update current supplier's profile - auto-creates if doesn't exist"""
         profile = get_or_create_supplier_profile(request.user)
         serializer = SupplierProfileUpdateSerializer(profile, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
+        
+        if not serializer.is_valid():
+            # Log validation errors for debugging
+            print("Validation errors:", serializer.errors)
+            return Response({
+                'error': 'Validation failed',
+                'details': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer.save()
         
         # Return full profile data
