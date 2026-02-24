@@ -120,7 +120,28 @@ const translations = {
         role: "Market Analyst • Kerala",
         text: "The data and insights provided help in making informed decisions about crop selection and market trends."
       }
-    ]
+    ],
+    profile: {
+      title: "My Profile",
+      subtitle: "Manage your personal details & account settings",
+      notifications: "Notifications",
+      verified: "Verified Farmer",
+      language: "Language",
+      logout: "Log Out",
+      personalInfo: "Personal Information",
+      editDetails: "Edit Details",
+      fullName: "Full Name",
+      phoneNumber: "Phone Number",
+      email: "Email Address",
+      address: "Farm Address",
+      save: "Save Changes",
+      saving: "Saving...",
+      cancel: "Cancel",
+      journey: "Your Farming Journey",
+      totalOrders: "Total Orders",
+      equipmentRents: "Equipment Rents",
+      activeListings: "Active Listings"
+    }
   },
   hi: {
     nav: {
@@ -216,7 +237,28 @@ const translations = {
       { name: "राजेश कुमार", role: "किसान • पंजाब", text: "एग्रीकनेक्ट ने मेरी फसल प्रबंधन को बहुत आसान बना दिया है।" },
       { name: "स्नेहा पाटिल", role: "आपूर्तिकर्ता • महाराष्ट्र", text: "उपकरण सूचीबद्ध करना बहुत आसान है और मांग में काफी वृद्धि हुई है।" },
       { name: "अमित शर्मा", role: "उपभोक्ता • दिल्ली", text: "सीधे किसानों से मिलने वाले उत्पाद बहुत ही ताजा और सस्ते हैं।" }
-    ]
+    ],
+    profile: {
+      title: "मेरी प्रोफाइल",
+      subtitle: "अपने व्यक्तिगत विवरण और खाता सेटिंग प्रबंधित करें",
+      notifications: "सूचनाएं",
+      verified: "सत्यापित किसान",
+      language: "भाषा",
+      logout: "लॉग आउट",
+      personalInfo: "व्यक्तिगत जानकारी",
+      editDetails: "विवरण संपादित करें",
+      fullName: "पूरा नाम",
+      phoneNumber: "फ़ोन नंबर",
+      email: "ईमेल पता",
+      address: "खेत का पता",
+      save: "परिवर्तन सहेजें",
+      saving: "सहेज रहा है...",
+      cancel: "रद्द करें",
+      journey: "आपकी कृषि यात्रा",
+      totalOrders: "कुल आदेश",
+      equipmentRents: "उपकरण किराये",
+      activeListings: "सक्रिय लिस्टिंग"
+    }
   },
   te: {
     nav: {
@@ -312,7 +354,28 @@ const translations = {
       { name: "రాజేష్ కుమార్", role: "రైతు • పంజాబ్", text: "అగ్రి కనెక్ట్ నా సాగును సులభతరం చేసింది." },
       { name: "స్నేహా పాటిల్", role: "సరఫరాదారు • మహారాష్ట్ర", text: "అద్దె విన్నపాలు చాలా పెరిగాయి." },
       { name: "అమిత్ శర్మ", role: "వినియోగదారుడు • ఢిల్లీ", text: "నేరుగా రైతుల నుండి ఉత్పత్తులు బాగున్నాయి." }
-    ]
+    ],
+    profile: {
+      title: "నా ప్రొఫైల్",
+      subtitle: "మీ వ్యక్తిగత వివరాలు & ఖాతా సెట్టింగ్‌లను నిర్వహించండి",
+      notifications: "నోటిఫికేషన్లు",
+      verified: "ధృవీకరించబడిన రైతు",
+      language: "భాష",
+      logout: "లాగ్ అవుట్",
+      personalInfo: "వ్యక్తిగత సమాచారం",
+      editDetails: "వివరాలను సవరించండి",
+      fullName: "పూర్తి పేరు",
+      phoneNumber: "ఫోన్ నంబర్",
+      email: "ఇమెయిల్ చిరునామా",
+      address: "వ్యవసాయ చిరునామా",
+      save: "మార్పులను ఇలా సేవ్ చేయండి",
+      saving: "సేవ్ అవుతోంది...",
+      cancel: "రద్దు చేయండి",
+      journey: "మీ వ్యవసాయ ప్రయాణం",
+      totalOrders: "మొత్తం ఆర్డర్లు",
+      equipmentRents: "పరికరాల అద్దెలు",
+      activeListings: "యాక్టివ్ లిస్టింగ్‌లు"
+    }
   },
   ta: {
     nav: {
@@ -408,7 +471,28 @@ const translations = {
       { name: "ராஜேஷ் குமார்", role: "விவசாயி • பஞ்சாப்", text: "விவசாயத்தை எளிமையாக்க இது ஒரு சிறந்த தளம்." },
       { name: "நேஹா பாட்டீல்", role: "சப்ளையர் • மகாராஷ்டிரா", text: "இயந்திரங்களுக்கான தேவை இங்கே அதிகமாக உள்ளது." },
       { name: "அமித் ஷர்மா", role: "நுகர்வோர் • டெல்லி", text: "புதிய தயாரிப்புகளை நேரடியாகப் பெற முடிகிறது." }
-    ]
+    ],
+    profile: {
+      title: "என் சுயவிவரம்",
+      subtitle: "உங்கள் தனிப்பட்ட விவரங்கள் மற்றும் கணக்கு அமைப்புகளை நிர்வகிக்கவும்",
+      notifications: "அறிவிப்புகள்",
+      verified: "சரிபார்க்கப்பட்ட விவசாயி",
+      language: "மொழி",
+      logout: "வெளியேறு",
+      personalInfo: "தனிப்பட்ட தகவல்கள்",
+      editDetails: "விவரங்களைத் திருത്തவும்",
+      fullName: "முழு பெயர்",
+      phoneNumber: "தொலைபேசி எண்",
+      email: "மின்னஞ்சல் முகவரி",
+      address: "பண்ணை முகவரி",
+      save: "மாற்றங்களைச் சேமிக்கவும்",
+      saving: "சேமிக்கிறது...",
+      cancel: "ரத்து செய்",
+      journey: "உங்கள் விவசாய பயணம்",
+      totalOrders: "மொத்த ஆர்டர்கள்",
+      equipmentRents: "உபகரணங்கள் வாடகை",
+      activeListings: "செயலில் உள்ள பட்டியல்கள்"
+    }
   },
   kn: {
     nav: {
@@ -498,7 +582,28 @@ const translations = {
       { name: "ರಾಜೇಶ್ ಕುಮಾರ್", role: "ರೈತ • ಪಂಜಾಬ್", text: "ಈ ವೇದಿಕೆ ರೈತರಿಗೆ ಅತ್ಯಂತ ಸಹಕಾರಿ." },
       { name: "ಸ್ನೇಹಾ ಪಾಟೀಲ್", role: "ಪೂರೈಕೆದಾರ • ಮಹಾರಾಷ್ಟ್ರ", text: "ಯಂತ್ರಗಳ ಬಾಡಿಗೆ ಇಲ್ಲಿ ಸುಲಭವಾಗಿದೆ." },
       { name: "ಅಮಿತ್ ಶರ್ಮಾ", role: "ಗ್ರಾಹಕ • ದೆಹಲಿ", text: "ಅತ್ಯುತ್ತಮ ಗುಣಮಟ್ಟದ ಉತ್ಪನ್ನಗಳು ದೊರೆಯುತ್ತವೆ." }
-    ]
+    ],
+    profile: {
+      title: "ನನ್ನ ಪ್ರೊಫೈಲ್",
+      subtitle: "ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ವಿವರಗಳು ಮತ್ತು ಖಾತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
+      notifications: "ಸೂಚನೆಗಳು",
+      verified: "ಪರಿಶೀಲಿಸಿದ ರೈತ",
+      language: "ಭಾಷೆ",
+      logout: "ಲಾಗ್ ಔಟ್",
+      personalInfo: "ವೈಯಕ್ತಿಕ ಮಾಹಿತಿ",
+      editDetails: "ವಿವರಗಳನ್ನು ಸಂಪಾದಿಸಿ",
+      fullName: "ಪೂರ್ಣ ಹೆಸರು",
+      phoneNumber: "ದೂರವಾಣಿ ಸಂಖ್ಯೆ",
+      email: "ಇಮೇಲ್ ವಿಳಾಸ",
+      address: "ಕೃಷಿ ವಿಳಾಸ",
+      save: "ಪರಿವರ್ತನೆಗಳನ್ನು ಉಳಿಸಿ",
+      saving: "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
+      cancel: "ರದ್ದುಮಾಡಿ",
+      journey: "ನಿಮ್ಮ ಕೃಷಿ ಪಯಣ",
+      totalOrders: "ಒಟ್ಟು ಆದೇಶಗಳು",
+      equipmentRents: "ಉಪಕರಣ ಬಾಡಿಗೆಗಳು",
+      activeListings: "ಸಕ್ರಿಯ ಪಟ್ಟಿಗಳು"
+    }
   }
 };
 

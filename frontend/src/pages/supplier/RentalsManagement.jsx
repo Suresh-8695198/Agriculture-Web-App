@@ -6,7 +6,6 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import api from '../../api/axios';
-import SupplierSidebar from '../../components/SupplierSidebar';
 import '../SupplierPortal.css';
 
 const RentalsManagement = () => {
@@ -90,195 +89,188 @@ const RentalsManagement = () => {
 
     if (loading && rentals.length === 0) {
         return (
-            <div className="supplier-portal-layout">
-                <SupplierSidebar />
-                <div className="portal-main-content">
-                    <div className="loading-container">
-                        <div className="loading-spinner"></div>
-                        <p>Loading rentals...</p>
-                    </div>
+            <div className="portal-main-content">
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>Loading rentals...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="supplier-portal-layout">
-            <SupplierSidebar />
-
-            <div className="portal-main-content">
-                <div className="portal-header">
-                    <div>
-                        <h1 className="portal-title">Rentals Management</h1>
-                        <p className="portal-subtitle">Track equipment bookings and manage rental periods</p>
-                    </div>
-                    {stats && (
-                        <div className="header-stats-simple">
-                            <div className="stat-pill">
-                                <span>Total: {stats.total_rentals}</span>
-                            </div>
-                            <div className="stat-pill warning">
-                                <span>Active: {stats.active_rentals}</span>
-                            </div>
-                            <div className="stat-pill success">
-                                <span>Revenue: ₹{stats.total_revenue}</span>
-                            </div>
-                        </div>
-                    )}
+        <div className="portal-main-content">
+            <div className="portal-header">
+                <div>
+                    <h1 className="portal-title">Rentals Management</h1>
+                    <p className="portal-subtitle">Track equipment bookings and manage rental periods</p>
                 </div>
-
-                {/* Filters */}
-                <div className="section-card" style={{ marginBottom: '1.5rem' }}>
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                        <div style={{ flex: 1, minWidth: '250px' }}>
-                            <div style={{ position: 'relative' }}>
-                                <FaSearch style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
-                                <input
-                                    type="text"
-                                    placeholder="Search by rental ID, customer or equipment..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="form-control"
-                                    style={{ paddingLeft: '2.5rem' }}
-                                />
-                            </div>
+                {stats && (
+                    <div className="header-stats-simple">
+                        <div className="stat-pill">
+                            <span>Total: {stats.total_rentals}</span>
                         </div>
-                        <div style={{ minWidth: '200px' }}>
-                            <select
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
+                        <div className="stat-pill warning">
+                            <span>Active: {stats.active_rentals}</span>
+                        </div>
+                        <div className="stat-pill success">
+                            <span>Revenue: ₹{stats.total_revenue}</span>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Filters */}
+            <div className="section-card" style={{ marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '250px' }}>
+                        <div style={{ position: 'relative' }}>
+                            <FaSearch style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+                            <input
+                                type="text"
+                                placeholder="Search by rental ID, customer or equipment..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 className="form-control"
-                            >
-                                <option value="all">All Statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="active">Active</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
-                            </select>
+                                style={{ paddingLeft: '2.5rem' }}
+                            />
                         </div>
                     </div>
+                    <div style={{ minWidth: '200px' }}>
+                        <select
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            className="form-control"
+                        >
+                            <option value="all">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
                 </div>
+            </div>
 
-                {/* Rentals List */}
-                <div className="rentals-grid">
-                    {filteredRentals.length === 0 ? (
-                        <div className="section-card" style={{ textAlign: 'center', padding: '3rem', gridColumn: '1 / -1' }}>
-                            <FaTractor style={{ fontSize: '4rem', color: '#D1D5DB', marginBottom: '1rem' }} />
-                            <h3 style={{ color: '#6B7280' }}>No rentals found</h3>
-                            <p style={{ color: '#9CA3AF' }}>Bookings will appear here when customers rent your machinery.</p>
-                        </div>
-                    ) : (
-                        filteredRentals.map(rental => (
-                            <div key={rental.id} className="section-card rental-card" style={{ padding: '0', overflow: 'hidden' }}>
+            {/* Rentals List */}
+            <div className="rentals-grid">
+                {filteredRentals.length === 0 ? (
+                    <div className="section-card" style={{ textAlign: 'center', padding: '3rem', gridColumn: '1 / -1' }}>
+                        <FaTractor style={{ fontSize: '4rem', color: '#D1D5DB', marginBottom: '1rem' }} />
+                        <h3 style={{ color: '#6B7280' }}>No rentals found</h3>
+                        <p style={{ color: '#9CA3AF' }}>Bookings will appear here when customers rent your machinery.</p>
+                    </div>
+                ) : (
+                    filteredRentals.map(rental => (
+                        <div key={rental.id} className="section-card rental-card" style={{ padding: '0', overflow: 'hidden' }}>
+                            <div style={{
+                                padding: '1.25rem',
+                                borderBottom: '1px solid #F3F4F6',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                background: '#F9FAFB'
+                            }}>
+                                <div>
+                                    <span style={{ fontSize: '0.875rem', fontWeight: '700', color: '#374151' }}>{rental.rental_number}</span>
+                                    <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>Booked on: {new Date(rental.created_at).toLocaleDateString()}</div>
+                                </div>
                                 <div style={{
-                                    padding: '1.25rem',
-                                    borderBottom: '1px solid #F3F4F6',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    background: '#F9FAFB'
+                                    background: getStatusColor(rental.status),
+                                    color: 'white',
+                                    padding: '0.25rem 0.75rem',
+                                    borderRadius: '1rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '600',
+                                    textTransform: 'capitalize'
                                 }}>
-                                    <div>
-                                        <span style={{ fontSize: '0.875rem', fontWeight: '700', color: '#374151' }}>{rental.rental_number}</span>
-                                        <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>Booked on: {new Date(rental.created_at).toLocaleDateString()}</div>
-                                    </div>
+                                    {rental.status_display}
+                                </div>
+                            </div>
+
+                            <div style={{ padding: '1.5rem' }}>
+                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
                                     <div style={{
-                                        background: getStatusColor(rental.status),
-                                        color: 'white',
-                                        padding: '0.25rem 0.75rem',
-                                        borderRadius: '1rem',
-                                        fontSize: '0.75rem',
-                                        fontWeight: '600',
-                                        textTransform: 'capitalize'
-                                    }}>
-                                        {rental.status_display}
+                                        width: '80px',
+                                        height: '80px',
+                                        background: rental.equipment_image ? `url(${rental.equipment_image})` : '#E5E7EB',
+                                        backgroundSize: 'cover',
+                                        borderRadius: '0.5rem'
+                                    }}></div>
+                                    <div style={{ flex: 1 }}>
+                                        <h4 style={{ margin: '0 0 0.25rem 0', color: '#111827' }}>{rental.equipment_name}</h4>
+                                        <div style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+                                            <FaCalendarAlt size={10} /> {new Date(rental.start_date).toLocaleDateString()} to {new Date(rental.end_date).toLocaleDateString()}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>Duration: {rental.rental_duration_days} days</div>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#8B6F47', marginTop: '0.5rem' }}>Total: ₹{rental.total_amount}</div>
                                     </div>
                                 </div>
 
-                                <div style={{ padding: '1.5rem' }}>
-                                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-                                        <div style={{
-                                            width: '80px',
-                                            height: '80px',
-                                            background: rental.equipment_image ? `url(${rental.equipment_image})` : '#E5E7EB',
-                                            backgroundSize: 'cover',
-                                            borderRadius: '0.5rem'
-                                        }}></div>
-                                        <div style={{ flex: 1 }}>
-                                            <h4 style={{ margin: '0 0 0.25rem 0', color: '#111827' }}>{rental.equipment_name}</h4>
-                                            <div style={{ fontSize: '0.875rem', color: '#6B7280' }}>
-                                                <FaCalendarAlt size={10} /> {new Date(rental.start_date).toLocaleDateString()} to {new Date(rental.end_date).toLocaleDateString()}
-                                            </div>
-                                            <div style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>Duration: {rental.rental_duration_days} days</div>
-                                            <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#8B6F47', marginTop: '0.5rem' }}>Total: ₹{rental.total_amount}</div>
+                                <div style={{ background: '#F9FAFB', borderRadius: '0.75rem', padding: '1rem', marginBottom: '1.5rem' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <div>
+                                            <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6B7280' }}>
+                                                <FaUser size={10} /> CUSTOMER
+                                            </h5>
+                                            <div style={{ fontSize: '0.875rem', color: '#1F2937', fontWeight: '600' }}>{rental.customer_name}</div>
+                                            <div style={{ fontSize: '0.8rem', color: '#6B7280' }}>{rental.customer_phone}</div>
                                         </div>
-                                    </div>
-
-                                    <div style={{ background: '#F9FAFB', borderRadius: '0.75rem', padding: '1rem', marginBottom: '1.5rem' }}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                            <div>
-                                                <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6B7280' }}>
-                                                    <FaUser size={10} /> CUSTOMER
-                                                </h5>
-                                                <div style={{ fontSize: '0.875rem', color: '#1F2937', fontWeight: '600' }}>{rental.customer_name}</div>
-                                                <div style={{ fontSize: '0.8rem', color: '#6B7280' }}>{rental.customer_phone}</div>
-                                            </div>
-                                            <div>
-                                                <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6B7280' }}>
-                                                    <FaMapMarkerAlt size={10} /> LOCATION
-                                                </h5>
-                                                <div style={{ fontSize: '0.8rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {rental.delivery_address || 'Not specified'}
-                                                </div>
+                                        <div>
+                                            <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6B7280' }}>
+                                                <FaMapMarkerAlt size={10} /> LOCATION
+                                            </h5>
+                                            <div style={{ fontSize: '0.8rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {rental.delivery_address || 'Not specified'}
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                        {rental.status === 'pending' && (
-                                            <>
-                                                <button onClick={() => handleStatusUpdate(rental.id, 'confirmed')} className="btn-success-supplier" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }}>
-                                                    <FaCheck /> Confirm
-                                                </button>
-                                                <button onClick={() => handleStatusUpdate(rental.id, 'rejected')} className="btn-secondary-supplier" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem', color: '#EF4444', borderColor: '#EF4444' }}>
-                                                    <FaRegTimesCircle /> Reject
-                                                </button>
-                                            </>
-                                        )}
-                                        {rental.status === 'confirmed' && (
-                                            <button onClick={() => handleStatusUpdate(rental.id, 'active')} className="btn-primary-supplier" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }}>
-                                                <FaTractor /> Handover & Start
+                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                    {rental.status === 'pending' && (
+                                        <>
+                                            <button onClick={() => handleStatusUpdate(rental.id, 'confirmed')} className="btn-success-supplier" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }}>
+                                                <FaCheck /> Confirm
                                             </button>
-                                        )}
-                                        {rental.status === 'active' && (
-                                            <button onClick={() => handleStatusUpdate(rental.id, 'completed')} className="btn-success-supplier" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }}>
-                                                <FaCheckCircle /> Mark Completed
+                                            <button onClick={() => handleStatusUpdate(rental.id, 'rejected')} className="btn-secondary-supplier" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem', color: '#EF4444', borderColor: '#EF4444' }}>
+                                                <FaRegTimesCircle /> Reject
                                             </button>
-                                        )}
+                                        </>
+                                    )}
+                                    {rental.status === 'confirmed' && (
+                                        <button onClick={() => handleStatusUpdate(rental.id, 'active')} className="btn-primary-supplier" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }}>
+                                            <FaTractor /> Handover & Start
+                                        </button>
+                                    )}
+                                    {rental.status === 'active' && (
+                                        <button onClick={() => handleStatusUpdate(rental.id, 'completed')} className="btn-success-supplier" style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }}>
+                                            <FaCheckCircle /> Mark Completed
+                                        </button>
+                                    )}
 
-                                        <div style={{ width: '100%', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #F3F4F6' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6B7280' }}>Payment: {rental.payment_status}</span>
-                                                {rental.payment_status !== 'paid' && (
-                                                    <button onClick={() => handlePaymentUpdate(rental.id, 'paid')} style={{
-                                                        background: 'none',
-                                                        border: 'none',
-                                                        color: '#3B82F6',
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: '700',
-                                                        cursor: 'pointer',
-                                                        textDecoration: 'underline'
-                                                    }}>Mark as Paid</button>
-                                                )}
-                                            </div>
+                                    <div style={{ width: '100%', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #F3F4F6' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6B7280' }}>Payment: {rental.payment_status}</span>
+                                            {rental.payment_status !== 'paid' && (
+                                                <button onClick={() => handlePaymentUpdate(rental.id, 'paid')} style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: '#3B82F6',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: '700',
+                                                    cursor: 'pointer',
+                                                    textDecoration: 'underline'
+                                                }}>Mark as Paid</button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        ))
-                    )}
-                </div>
+                        </div>
+                    ))
+                )}
             </div>
 
             <style dangerouslySetInnerHTML={{

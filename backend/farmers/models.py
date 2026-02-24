@@ -18,6 +18,10 @@ class FarmerProfile(models.Model):
         ordering = ['-created_at']
 
 
+def produce_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/produce/user_<id>/<filename>
+    return f'produce/user_{instance.farmer.user.id}/{filename}'
+
 class FarmProduce(models.Model):
     """Agricultural produce listed by farmers"""
     
@@ -37,18 +41,31 @@ class FarmProduce(models.Model):
         ('quintal', 'Quintal'),
         ('ton', 'Ton'),
         ('bag', 'Bag'),
+        ('bunch', 'Bunch'),
+        ('dozen', 'Dozen'),
     )
     
     farmer = models.ForeignKey(FarmerProfile, on_delete=models.CASCADE, related_name='produce')
     name = models.CharField(max_length=200)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    variety = models.CharField(max_length=100, blank=True, null=True)
+    is_organic = models.BooleanField(default=False)
+    
     description = models.TextField(blank=True)
     price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
     unit = models.CharField(max_length=20, choices=UNIT_CHOICES)
+    
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0) # Total quantity
     available_quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='produce/', null=True, blank=True)
+    min_order_quantity = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    image = models.ImageField(upload_to=produce_directory_path, null=True, blank=True)
+    
     is_available = models.BooleanField(default=True)
     harvest_date = models.DateField(null=True, blank=True)
+    available_from = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

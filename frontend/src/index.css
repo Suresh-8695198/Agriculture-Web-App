@@ -29,10 +29,11 @@ body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f9fafb;
-  color: #1f2937;
+  background-color: var(--primary-bg);
+  color: var(--gray-800);
   line-height: 1.6;
 }
+
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
@@ -41,16 +42,12 @@ code {
 
 /* CSS Variables */
 :root {
-  /* Master Brand Colors - Platform Standard */
+  /* Master Brand Colors - Mature Enterprise Green */
   --primary-green: #2E7D32;
-  --primary-green-light: #66BB6A;
-  --primary-green-dark: #1B5E20;
-  --primary-bg: #F4F8F4;
-  
-  /* Shared UI Elements */
-  --accent-orange: #FFA000; /* Harvest Orange */
-  --accent-gold: #FFB300;   /* Earnings Highlight */
-  --accent-blue: #3b82f6;
+  --primary-green-light: #43A047;
+  --primary-green-dark: #1F5E3B;
+  --primary-bg: #F6FBF8;
+  --accent-light: #A7F3D0;
   
   /* Neutral Colors */
   --gray-50: #F9FAFB;
@@ -65,7 +62,7 @@ code {
   --gray-900: #111827;
   
   /* Semantic Colors */
-  --success: #2E7D32; /* Aligned with Brand Green */
+  --success: #10B981;
   --warning: #F59E0B;
   --error: #EF4444;
   --info: #3B82F6;
@@ -75,6 +72,7 @@ code {
   --transition-base: 200ms ease-in-out;
   --transition-slow: 300ms ease-in-out;
 }
+
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {

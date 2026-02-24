@@ -29,10 +29,17 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await login(username, password, role);
-      toast.success('Login successful! Welcome back.');
 
-      // Redirect based on user role
       const userType = response.user.user_type;
+
+      // If user logged in from a different portal than their role, inform them
+      if (role && role !== userType) {
+        toast.info(`You're registered as a ${userType}. Redirecting to your dashboard.`);
+      } else {
+        toast.success('Login successful! Welcome back.');
+      }
+
+      // Redirect based on actual user role
       if (userType === 'farmer') {
         navigate('/farmer/dashboard');
       } else if (userType === 'supplier') {

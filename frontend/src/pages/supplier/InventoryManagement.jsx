@@ -10,7 +10,6 @@ import {
 } from 'recharts';
 import { toast } from 'react-toastify';
 import api from '../../api/axios';
-import SupplierSidebar from '../../components/SupplierSidebar';
 import '../SupplierPortal.css';
 
 const InventoryManagement = () => {
@@ -80,287 +79,280 @@ const InventoryManagement = () => {
 
     if (loading && !stats) {
         return (
-            <div className="supplier-portal-layout">
-                <SupplierSidebar />
-                <div className="portal-main-content">
-                    <div className="loading-container">
-                        <div className="loading-spinner"></div>
-                        <p>Loading your inventory...</p>
-                    </div>
+            <div className="portal-main-content">
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>Loading your inventory...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="supplier-portal-layout">
-            <SupplierSidebar />
+        <div className="portal-main-content">
+            <div className="portal-header">
+                <div>
+                    <h1 className="portal-title">Inventory & Stock Control</h1>
+                    <p className="portal-subtitle">Advanced warehouse management and batch tracking</p>
+                </div>
+                <div className="header-actions">
+                    <button className="btn-secondary-supplier" onClick={fetchData}>
+                        <FaSyncAlt /> Refresh
+                    </button>
+                    <button className={`btn-icon-toggle ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} title="Item List">
+                        <FaList />
+                    </button>
+                    <button className={`btn-icon-toggle ${viewMode === 'activity' ? 'active' : ''}`} onClick={() => setViewMode('activity')} title="Activity Logs">
+                        <FaHistory />
+                    </button>
+                </div>
+            </div>
 
-            <div className="portal-main-content">
-                <div className="portal-header">
-                    <div>
-                        <h1 className="portal-title">Inventory & Stock Control</h1>
-                        <p className="portal-subtitle">Advanced warehouse management and batch tracking</p>
+            {/* KPI Overview */}
+            <div className="inventory-stats-row">
+                <div className="stat-box">
+                    <div className="stat-icon-wrap blue">
+                        <FaBox />
                     </div>
-                    <div className="header-actions">
-                        <button className="btn-secondary-supplier" onClick={fetchData}>
-                            <FaSyncAlt /> Refresh
-                        </button>
-                        <button className={`btn-icon-toggle ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} title="Item List">
-                            <FaList />
-                        </button>
-                        <button className={`btn-icon-toggle ${viewMode === 'activity' ? 'active' : ''}`} onClick={() => setViewMode('activity')} title="Activity Logs">
-                            <FaHistory />
-                        </button>
+                    <div className="stat-content">
+                        <span className="stat-label">Total SKUs</span>
+                        <span className="stat-number">{stats?.total_items}</span>
                     </div>
                 </div>
-
-                {/* KPI Overview */}
-                <div className="inventory-stats-row">
-                    <div className="stat-box">
-                        <div className="stat-icon-wrap blue">
-                            <FaBox />
-                        </div>
-                        <div className="stat-content">
-                            <span className="stat-label">Total SKUs</span>
-                            <span className="stat-number">{stats?.total_items}</span>
-                        </div>
+                <div className="stat-box warning">
+                    <div className="stat-icon-wrap orange">
+                        <FaExclamationTriangle />
                     </div>
-                    <div className="stat-box warning">
-                        <div className="stat-icon-wrap orange">
-                            <FaExclamationTriangle />
-                        </div>
-                        <div className="stat-content">
-                            <span className="stat-label">Low Stock Alerts</span>
-                            <span className="stat-number">{stats?.low_stock_count}</span>
-                        </div>
-                    </div>
-                    <div className="stat-box danger">
-                        <div className="stat-icon-wrap red">
-                            <FaBox />
-                        </div>
-                        <div className="stat-content">
-                            <span className="stat-label">Out of Stock</span>
-                            <span className="stat-number">{stats?.out_of_stock_count}</span>
-                        </div>
-                    </div>
-                    <div className="stat-box success">
-                        <div className="stat-icon-wrap green">
-                            <FaHistory />
-                        </div>
-                        <div className="stat-content">
-                            <span className="stat-label">Recent Updates</span>
-                            <span className="stat-number">{stats?.recent_activity?.length || 0}</span>
-                        </div>
+                    <div className="stat-content">
+                        <span className="stat-label">Low Stock Alerts</span>
+                        <span className="stat-number">{stats?.low_stock_count}</span>
                     </div>
                 </div>
+                <div className="stat-box danger">
+                    <div className="stat-icon-wrap red">
+                        <FaBox />
+                    </div>
+                    <div className="stat-content">
+                        <span className="stat-label">Out of Stock</span>
+                        <span className="stat-number">{stats?.out_of_stock_count}</span>
+                    </div>
+                </div>
+                <div className="stat-box success">
+                    <div className="stat-icon-wrap green">
+                        <FaHistory />
+                    </div>
+                    <div className="stat-content">
+                        <span className="stat-label">Recent Updates</span>
+                        <span className="stat-number">{stats?.recent_activity?.length || 0}</span>
+                    </div>
+                </div>
+            </div>
 
-                <div className="inventory-content-grid">
-                    {/* Main Content Area */}
-                    <div className="inventory-main-panel">
-                        {viewMode === 'list' ? (
-                            <div className="section-card no-padding overflow-hidden">
-                                <div className="card-controls">
-                                    <div className="search-pill">
-                                        <FaSearch />
-                                        <input
-                                            type="text"
-                                            placeholder="Search inventory..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                        />
-                                    </div>
-                                    <select
-                                        className="filter-select"
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                    >
-                                        <option value="all">All Categories</option>
-                                        {categories.map(cat => (
-                                            <option key={cat} value={cat}>{cat.replace('_', ' ').charAt(0).toUpperCase() + cat.slice(1)}</option>
-                                        ))}
-                                    </select>
+            <div className="inventory-content-grid">
+                {/* Main Content Area */}
+                <div className="inventory-main-panel">
+                    {viewMode === 'list' ? (
+                        <div className="section-card no-padding overflow-hidden">
+                            <div className="card-controls">
+                                <div className="search-pill">
+                                    <FaSearch />
+                                    <input
+                                        type="text"
+                                        placeholder="Search inventory..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
                                 </div>
-
-                                <div className="modern-table-container">
-                                    <table className="modern-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Product Details</th>
-                                                <th>Category</th>
-                                                <th>Stock Level</th>
-                                                <th>Financials</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredProducts.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan="5" className="empty-row">No matching products found</td>
-                                                </tr>
-                                            ) : (
-                                                filteredProducts.map(product => (
-                                                    <tr key={product.id}>
-                                                        <td>
-                                                            <div className="table-product-cell">
-                                                                <img src={product.image || 'https://via.placeholder.com/40'} alt={product.name} />
-                                                                <div>
-                                                                    <div className="cell-title">{product.name}</div>
-                                                                    <div className="cell-subline">ID: SKU-{product.id.toString().padStart(5, '0')}</div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            <span className="badge-outline">{product.category}</span>
-                                                        </td>
-                                                        <td>
-                                                            <div className="stock-level-cell">
-                                                                <div className="stock-number">
-                                                                    {product.stock_quantity} <span className="cell-unit">{product.unit}</span>
-                                                                </div>
-                                                                <div className="stock-progress-bg">
-                                                                    <div
-                                                                        className={`stock-progress-fill ${product.stock_quantity < 10 ? 'danger' : product.stock_quantity < 50 ? 'warning' : 'success'}`}
-                                                                        style={{ width: `${Math.min(100, product.stock_quantity)}%` }}
-                                                                    ></div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            <div className="cell-title">₹{product.price}</div>
-                                                            <div className="cell-subline">Net Value: ₹{(product.price * product.stock_quantity).toLocaleString()}</div>
-                                                        </td>
-                                                        <td>
-                                                            <div className="table-actions">
-                                                                <button
-                                                                    className="btn-circle-adjust success"
-                                                                    onClick={() => {
-                                                                        setSelectedProduct(product);
-                                                                        setAdjustType('restock');
-                                                                        setShowAdjustModal(true);
-                                                                    }}
-                                                                    title="Restock"
-                                                                >
-                                                                    <FaPlus />
-                                                                </button>
-                                                                <button
-                                                                    className="btn-circle-adjust danger"
-                                                                    onClick={() => {
-                                                                        setSelectedProduct(product);
-                                                                        setAdjustType('adjustment');
-                                                                        setShowAdjustModal(true);
-                                                                    }}
-                                                                    title="Deduct"
-                                                                >
-                                                                    <FaMinus />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <select
+                                    className="filter-select"
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                >
+                                    <option value="all">All Categories</option>
+                                    {categories.map(cat => (
+                                        <option key={cat} value={cat}>{cat.replace('_', ' ').charAt(0).toUpperCase() + cat.slice(1)}</option>
+                                    ))}
+                                </select>
                             </div>
-                        ) : (
-                            <div className="section-card activity-log-panel">
-                                <h3 className="panel-title"><FaHistory /> Stock Movement History</h3>
-                                <div className="activity-timeline">
-                                    {stats?.recent_activity.length === 0 ? (
-                                        <p className="empty-msg">No recent activity logs.</p>
-                                    ) : (
-                                        stats?.recent_activity.map(log => (
-                                            <div key={log.id} className="timeline-item">
-                                                <div className={`timeline-icon ${log.quantity > 0 ? 'plus' : 'minus'}`}>
-                                                    {log.quantity > 0 ? <FaPlus /> : <FaMinus />}
+
+                            <div className="modern-table-container">
+                                <table className="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product Details</th>
+                                            <th>Category</th>
+                                            <th>Stock Level</th>
+                                            <th>Financials</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredProducts.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="5" className="empty-row">No matching products found</td>
+                                            </tr>
+                                        ) : (
+                                            filteredProducts.map(product => (
+                                                <tr key={product.id}>
+                                                    <td>
+                                                        <div className="table-product-cell">
+                                                            <img src={product.image || 'https://via.placeholder.com/40'} alt={product.name} />
+                                                            <div>
+                                                                <div className="cell-title">{product.name}</div>
+                                                                <div className="cell-subline">ID: SKU-{product.id.toString().padStart(5, '0')}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span className="badge-outline">{product.category}</span>
+                                                    </td>
+                                                    <td>
+                                                        <div className="stock-level-cell">
+                                                            <div className="stock-number">
+                                                                {product.stock_quantity} <span className="cell-unit">{product.unit}</span>
+                                                            </div>
+                                                            <div className="stock-progress-bg">
+                                                                <div
+                                                                    className={`stock-progress-fill ${product.stock_quantity < 10 ? 'danger' : product.stock_quantity < 50 ? 'warning' : 'success'}`}
+                                                                    style={{ width: `${Math.min(100, product.stock_quantity)}%` }}
+                                                                ></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div className="cell-title">₹{product.price}</div>
+                                                        <div className="cell-subline">Net Value: ₹{(product.price * product.stock_quantity).toLocaleString()}</div>
+                                                    </td>
+                                                    <td>
+                                                        <div className="table-actions">
+                                                            <button
+                                                                className="btn-circle-adjust success"
+                                                                onClick={() => {
+                                                                    setSelectedProduct(product);
+                                                                    setAdjustType('restock');
+                                                                    setShowAdjustModal(true);
+                                                                }}
+                                                                title="Restock"
+                                                            >
+                                                                <FaPlus />
+                                                            </button>
+                                                            <button
+                                                                className="btn-circle-adjust danger"
+                                                                onClick={() => {
+                                                                    setSelectedProduct(product);
+                                                                    setAdjustType('adjustment');
+                                                                    setShowAdjustModal(true);
+                                                                }}
+                                                                title="Deduct"
+                                                            >
+                                                                <FaMinus />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="section-card activity-log-panel">
+                            <h3 className="panel-title"><FaHistory /> Stock Movement History</h3>
+                            <div className="activity-timeline">
+                                {stats?.recent_activity.length === 0 ? (
+                                    <p className="empty-msg">No recent activity logs.</p>
+                                ) : (
+                                    stats?.recent_activity.map(log => (
+                                        <div key={log.id} className="timeline-item">
+                                            <div className={`timeline-icon ${log.quantity > 0 ? 'plus' : 'minus'}`}>
+                                                {log.quantity > 0 ? <FaPlus /> : <FaMinus />}
+                                            </div>
+                                            <div className="timeline-content">
+                                                <div className="timeline-header">
+                                                    <span className="log-product">{log.product_name}</span>
+                                                    <span className="log-time">{new Date(log.created_at).toLocaleString()}</span>
                                                 </div>
-                                                <div className="timeline-content">
-                                                    <div className="timeline-header">
-                                                        <span className="log-product">{log.product_name}</span>
-                                                        <span className="log-time">{new Date(log.created_at).toLocaleString()}</span>
-                                                    </div>
-                                                    <div className="log-details">
-                                                        <span className={`log-qty ${log.quantity > 0 ? 'text-success' : 'text-danger'}`}>
-                                                            {log.quantity > 0 ? '+' : ''}{log.quantity} units
-                                                        </span>
-                                                        <span className="log-type">{log.change_type_display}</span>
-                                                        {log.note && <p className="log-note">"{log.note}"</p>}
-                                                    </div>
-                                                    <div className="log-footer">
-                                                        Adjusted by: {log.updated_by_name || 'System'} •
-                                                        Stock: {log.previous_stock} → {log.current_stock}
-                                                    </div>
+                                                <div className="log-details">
+                                                    <span className={`log-qty ${log.quantity > 0 ? 'text-success' : 'text-danger'}`}>
+                                                        {log.quantity > 0 ? '+' : ''}{log.quantity} units
+                                                    </span>
+                                                    <span className="log-type">{log.change_type_display}</span>
+                                                    {log.note && <p className="log-note">"{log.note}"</p>}
+                                                </div>
+                                                <div className="log-footer">
+                                                    Adjusted by: {log.updated_by_name || 'System'} •
+                                                    Stock: {log.previous_stock} → {log.current_stock}
                                                 </div>
                                             </div>
-                                        ))
-                                    )}
-                                </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
-                        )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Sidebar Area */}
+                <div className="inventory-side-panel">
+                    <div className="section-card analytic-card">
+                        <h4 className="panel-title"><FaChartPie /> Category Hub</h4>
+                        <div style={{ height: '200px' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={stats?.category_distribution || []}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={50}
+                                        outerRadius={70}
+                                        paddingAngle={5}
+                                        dataKey="count"
+                                        nameKey="category"
+                                    >
+                                        {stats?.category_distribution?.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <RechartsTooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="category-legend">
+                            {stats?.category_distribution?.map((entry, index) => (
+                                <div key={entry.category} className="legend-item">
+                                    <span className="dot" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
+                                    <span className="label text-capitalize">{entry.category}</span>
+                                    <span className="value">{entry.count}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Sidebar Area */}
-                    <div className="inventory-side-panel">
-                        <div className="section-card analytic-card">
-                            <h4 className="panel-title"><FaChartPie /> Category Hub</h4>
-                            <div style={{ height: '200px' }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={stats?.category_distribution || []}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={50}
-                                            outerRadius={70}
-                                            paddingAngle={5}
-                                            dataKey="count"
-                                            nameKey="category"
-                                        >
-                                            {stats?.category_distribution?.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <RechartsTooltip />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                            <div className="category-legend">
-                                {stats?.category_distribution?.map((entry, index) => (
-                                    <div key={entry.category} className="legend-item">
-                                        <span className="dot" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
-                                        <span className="label text-capitalize">{entry.category}</span>
-                                        <span className="value">{entry.count}</span>
+                    <div className="section-card alert-card">
+                        <h4 className="panel-title danger"><FaExclamationTriangle /> Critical Alerts</h4>
+                        {stats?.low_stock_list.length === 0 ? (
+                            <p className="success-msg">All stock levels are healthy.</p>
+                        ) : (
+                            <div className="alert-list">
+                                {stats?.low_stock_list.map(p => (
+                                    <div key={p.id} className="alert-item">
+                                        <div className="alert-info">
+                                            <span className="name">{p.name}</span>
+                                            <span className="stock">Only {p.stock_quantity} {p.unit} left</span>
+                                        </div>
+                                        <button
+                                            className="btn-text-action"
+                                            onClick={() => {
+                                                setSelectedProduct(p);
+                                                setAdjustType('restock');
+                                                setShowAdjustModal(true);
+                                            }}
+                                        >Quick Restock</button>
                                     </div>
                                 ))}
                             </div>
-                        </div>
-
-                        <div className="section-card alert-card">
-                            <h4 className="panel-title danger"><FaExclamationTriangle /> Critical Alerts</h4>
-                            {stats?.low_stock_list.length === 0 ? (
-                                <p className="success-msg">All stock levels are healthy.</p>
-                            ) : (
-                                <div className="alert-list">
-                                    {stats?.low_stock_list.map(p => (
-                                        <div key={p.id} className="alert-item">
-                                            <div className="alert-info">
-                                                <span className="name">{p.name}</span>
-                                                <span className="stock">Only {p.stock_quantity} {p.unit} left</span>
-                                            </div>
-                                            <button
-                                                className="btn-text-action"
-                                                onClick={() => {
-                                                    setSelectedProduct(p);
-                                                    setAdjustType('restock');
-                                                    setShowAdjustModal(true);
-                                                }}
-                                            >Quick Restock</button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -675,7 +667,7 @@ const InventoryManagement = () => {
                     .inventory-content-grid { grid-template-columns: 1fr; }
                 }
             `}} />
-        </div>
+        </div >
     );
 };
 

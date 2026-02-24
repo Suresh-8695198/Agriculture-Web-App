@@ -73,27 +73,19 @@ class UserLoginView(APIView):
         password = serializer.validated_data['password']
         expected_role = serializer.validated_data.get('role', None)
         
+        from django.db.models import Q
+        
         # Try to find user by username or email
         user = None
-        try:
-            # Try username first
-            user_obj = User.objects.get(username=username_or_email)
+        user_obj = User.objects.filter(
+            Q(username=username_or_email) | Q(email=username_or_email)
+        ).first()
+        
+        if user_obj:
             user = authenticate(username=user_obj.username, password=password)
-        except User.DoesNotExist:
-            # Try email
-            try:
-                user_obj = User.objects.get(email=username_or_email)
-                user = authenticate(username=user_obj.username, password=password)
-            except User.DoesNotExist:
-                pass
+
         
         if user:
-            # Validate role if specified
-            if expected_role and user.user_type != expected_role:
-                return Response({
-                    'error': f'Invalid credentials for {expected_role} portal. Please use the correct portal or sign up first.'
-                }, status=status.HTTP_401_UNAUTHORIZED)
-            
             refresh = RefreshToken.for_user(user)
             return Response({
                 'user': UserSerializer(user).data,

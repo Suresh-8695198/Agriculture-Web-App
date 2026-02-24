@@ -7,6 +7,7 @@ from django.utils import timezone
 from math import radians, cos, sin, asin, sqrt
 
 from .models import SupplierProfile, Product, Equipment, Order, Rental, StockLog, SupplierReview, ProductReview
+from notifications.models import Notification
 from .serializers import (
     SupplierProfileSerializer, 
     SupplierProfileUpdateSerializer,
@@ -229,7 +230,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
     
     def perform_create(self, serializer):
-        supplier_profile = SupplierProfile.objects.get(user=self.request.user)
+        supplier_profile = get_or_create_supplier_profile(self.request.user)
         serializer.save(supplier=supplier_profile)
     
     @action(detail=False, methods=['get'])
@@ -452,31 +453,129 @@ class OrderViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['order_number', 'customer__username', 'product__name']
     ordering_fields = ['created_at', 'total_amount', 'status']
-    
+
     def get_queryset(self):
-        """Filter orders by supplier"""
+        """Filter orders - supplier sees their orders, farmer sees their own purchases."""
         user = self.request.user
         if hasattr(user, 'supplier_profile'):
             return Order.objects.filter(supplier=user.supplier_profile)
-        return Order.objects.none()
-    
+        # Farmers / regular users see their own purchases
+        return Order.objects.filter(customer=user)
+
+    # ── FARMER: Place a new order ─────────────────────────────────
+    @action(detail=False, methods=['post'])
+    def place_order(self, request):
+        """Farmer places an order for a product from a supplier."""
+        product_id = request.data.get('product_id')
+        quantity = request.data.get('quantity', 1)
+        delivery_method = request.data.get('delivery_method', 'pickup')
+        delivery_address = request.data.get('delivery_address', '')
+        customer_notes = request.data.get('customer_notes', '')
+
+        if not product_id:
+            return Response({'error': 'product_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            return Response({'error': 'quantity must be a positive integer.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            product = Product.objects.get(pk=product_id, is_available=True)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found or unavailable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if product.stock_quantity < quantity:
+            return Response(
+                {'error': f'Insufficient stock. Only {product.stock_quantity} available.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        delivery_charges = float(product.supplier.delivery_charges or 0) if delivery_method == 'delivery' else 0
+        total_amount = float(product.price) * quantity + delivery_charges
+
+        order = Order.objects.create(
+            supplier=product.supplier,
+            customer=request.user,
+            product=product,
+            quantity=quantity,
+            unit_price=product.price,
+            total_amount=total_amount,
+            delivery_method=delivery_method,
+            delivery_address=delivery_address,
+            delivery_charges=delivery_charges,
+            customer_notes=customer_notes,
+            status='pending',
+            payment_status='pending',
+        )
+
+        serializer = self.get_serializer(order)
+        
+        # Create notification for supplier
+        Notification.objects.create(
+            user=order.supplier.user,
+            title="New Order Received",
+            message=f"You have received a new order #{order.id} for {product.name}.",
+            notification_type='order',
+            related_object_id=f"SORD-{order.id}"
+        )
+        
+        # Create notification for farmer
+        Notification.objects.create(
+            user=request.user,
+            title="Order Placed",
+            message=f"Your order for {product.name} has been placed successfully.",
+            notification_type='order',
+            related_object_id=f"SORD-{order.id}"
+        )
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # ── FARMER: Get their purchase history ───────────────────────
+    @action(detail=False, methods=['get'])
+    def farmer_orders(self, request):
+        """Get all orders placed by the current farmer/user."""
+        orders = Order.objects.filter(customer=request.user).order_by('-created_at')
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            orders = orders.filter(status=status_filter)
+        serializer = self.get_serializer(orders, many=True)
+        return Response(serializer.data)
+
+    # ── FARMER: Cancel own order (only if pending) ───────────────
+    @action(detail=True, methods=['patch'])
+    def cancel_order(self, request, pk=None):
+        """Allow customer/farmer to cancel a pending order."""
+        try:
+            order = Order.objects.get(pk=pk, customer=request.user)
+        except Order.DoesNotExist:
+            return Response({'error': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+        if order.status not in ('pending',):
+            return Response({'error': f'Cannot cancel order with status: {order.status}.'}, status=status.HTTP_400_BAD_REQUEST)
+        order.status = 'cancelled'
+        order.save(update_fields=['status', 'updated_at'])
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def my_orders(self, request):
         """Get current supplier's orders"""
         try:
             supplier_profile = SupplierProfile.objects.get(user=request.user)
             orders = Order.objects.filter(supplier=supplier_profile)
-            
+
             # Filter by status if provided
             status_filter = request.query_params.get('status')
             if status_filter:
                 orders = orders.filter(status=status_filter)
-            
+
             serializer = self.get_serializer(orders, many=True)
             return Response(serializer.data)
         except SupplierProfile.DoesNotExist:
             return Response({'error': 'Supplier profile not found'}, status=status.HTTP_404_NOT_FOUND)
-    
+
     @action(detail=True, methods=['patch'])
     def update_status(self, request, pk=None):
         """Update order status and handle inventory"""
@@ -533,8 +632,18 @@ class OrderViewSet(viewsets.ModelViewSet):
             order.confirmed_at = timezone.now()
         elif new_status == 'delivered' and not order.delivered_at:
             order.delivered_at = timezone.now()
-        
+            
         order.save()
+        
+        # Create notification for customer
+        Notification.objects.create(
+            user=order.customer,
+            title="Order Status Updated",
+            message=f"Your order #{order.id} status has been updated to {new_status}.",
+            notification_type='order',
+            related_object_id=f"SORD-{order.id}"
+        )
+        
         serializer = self.get_serializer(order)
         return Response(serializer.data)
     
@@ -583,26 +692,131 @@ class RentalViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['rental_number', 'customer__username', 'equipment__name']
     ordering_fields = ['created_at', 'start_date', 'total_amount', 'status']
-    
+
     def get_queryset(self):
-        """Filter rentals by supplier"""
+        """Filter rentals - supplier sees their rentals, farmer sees their own requests."""
         user = self.request.user
         if hasattr(user, 'supplier_profile'):
             return Rental.objects.filter(supplier=user.supplier_profile)
-        return Rental.objects.none()
-    
+        return Rental.objects.filter(customer=user)
+
+    # ── FARMER: Request Equipment Rental ──────────────────────────
+    @action(detail=False, methods=['post'])
+    def request_rental(self, request):
+        """Farmer requests to rent equipment."""
+        equipment_id = request.data.get('equipment_id')
+        start_date = request.data.get('start_date')
+        end_date = request.data.get('end_date')
+        delivery_address = request.data.get('delivery_address', '')
+        operator_required = request.data.get('operator_required', False)
+        customer_notes = request.data.get('customer_notes', '')
+
+        if not all([equipment_id, start_date, end_date]):
+            return Response({'error': 'equipment_id, start_date, and end_date are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            equipment = Equipment.objects.get(pk=equipment_id, is_available=True, status='available')
+        except Equipment.DoesNotExist:
+            return Response({'error': 'Equipment not found or currently unavailable for rent.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Basic duration calculation (days)
+        from datetime import datetime
+        try:
+            d1 = datetime.strptime(start_date, '%Y-%m-%d')
+            d2 = datetime.strptime(end_date, '%Y-%m-%d')
+            duration_days = (d2 - d1).days + 1
+            if duration_days <= 0:
+                raise ValueError
+        except ValueError:
+            return Response({'error': 'Invalid dates. End date must be after start date.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Pricing calculations
+        rental_cost = float(equipment.daily_rate) * duration_days
+        operator_charges = float(equipment.operator_charge_per_day or 0) * duration_days if operator_required else 0
+        delivery_charges = float(equipment.supplier.delivery_charges or 0)
+        total_amount = rental_cost + operator_charges + delivery_charges + float(equipment.security_deposit)
+
+        rental = Rental.objects.create(
+            supplier=equipment.supplier,
+            customer=request.user,
+            equipment=equipment,
+            start_date=start_date,
+            end_date=end_date,
+            daily_rate=equipment.daily_rate,
+            total_rental_cost=rental_cost,
+            security_deposit=equipment.security_deposit,
+            operator_required=operator_required,
+            operator_charges=operator_charges,
+            total_amount=total_amount,
+            delivery_address=delivery_address,
+            delivery_charges=delivery_charges,
+            customer_notes=customer_notes,
+            status='pending',
+            payment_status='pending',
+        )
+
+        serializer = self.get_serializer(rental)
+        
+        # Create notification for supplier
+        Notification.objects.create(
+            user=rental.supplier.user,
+            title="New Rental Request",
+            message=f"You have received a new rental request for {equipment.name}.",
+            notification_type='rental',
+            related_object_id=f"RENT-{rental.id}"
+        )
+        
+        # Create notification for farmer
+        Notification.objects.create(
+            user=request.user,
+            title="Rental Requested",
+            message=f"Your rental request for {equipment.name} has been submitted.",
+            notification_type='rental',
+            related_object_id=f"RENT-{rental.id}"
+        )
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # ── FARMER: Get their rental requests ────────────────────────
+    @action(detail=False, methods=['get'])
+    def farmer_rentals(self, request):
+        """Get all rental requests placed by the current farmer/user."""
+        rentals = Rental.objects.filter(customer=request.user).order_by('-created_at')
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            rentals = rentals.filter(status=status_filter)
+        serializer = self.get_serializer(rentals, many=True)
+        return Response(serializer.data)
+
+    # ── FARMER: Cancel own rental request (only if pending) ───────
+    @action(detail=True, methods=['patch'])
+    def cancel_rental(self, request, pk=None):
+        """Allow customer/farmer to cancel a pending rental request."""
+        try:
+            rental = Rental.objects.get(pk=pk, customer=request.user)
+        except Rental.DoesNotExist:
+            return Response({'error': 'Rental request not found.'}, status=status.HTTP_404_NOT_FOUND)
+            
+        if rental.status not in ('pending',):
+            return Response({'error': f'Cannot cancel rental with status: {rental.status}.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        rental.status = 'cancelled'
+        rental.save(update_fields=['status', 'updated_at'])
+        serializer = self.get_serializer(rental)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def my_rentals(self, request):
         """Get current supplier's rentals"""
         try:
             supplier_profile = SupplierProfile.objects.get(user=request.user)
             rentals = Rental.objects.filter(supplier=supplier_profile)
-            
+
             # Filter by status if provided
             status_filter = request.query_params.get('status')
             if status_filter:
                 rentals = rentals.filter(status=status_filter)
-            
+
             serializer = self.get_serializer(rentals, many=True)
             return Response(serializer.data)
         except SupplierProfile.DoesNotExist:
@@ -639,6 +853,16 @@ class RentalViewSet(viewsets.ModelViewSet):
             rental.equipment.save()
         
         rental.save()
+        
+        # Create notification for farmer/customer
+        Notification.objects.create(
+            user=rental.customer,
+            title="Rental Status Updated",
+            message=f"Your rental request for {rental.equipment.name} is now {new_status}.",
+            notification_type='rental',
+            related_object_id=f"RENT-{rental.id}"
+        )
+        
         serializer = self.get_serializer(rental)
         return Response(serializer.data)
     

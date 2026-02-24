@@ -1,109 +1,160 @@
-import React, { useState } from 'react';
+import React, { memo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-    FaTachometerAlt, FaUser, FaBoxes, FaTractor, FaClipboardList,
-    FaCalendarCheck, FaWarehouse, FaMoneyBillWave, FaBell, FaStar,
-    FaChartBar, FaQuestionCircle, FaSignOutAlt, FaBars, FaTimes,
-    FaChevronLeft, FaChevronRight
-} from 'react-icons/fa';
+    LuLayoutDashboard, LuUser, LuBoxes, LuTractor, LuClipboardList,
+    LuCalendarCheck, LuWarehouse, LuWallet, LuBell, LuStar,
+    LuCircleHelp, LuLogOut, LuMenu, LuX,
+    LuChevronLeft, LuChevronRight, LuWheat, LuShoppingCart
+} from 'react-icons/lu';
 import { toast } from 'react-toastify';
 import './SupplierSidebar.css';
 
-const SupplierSidebar = () => {
+const NAV_SECTIONS = (user) => [
+    {
+        title: 'MAIN',
+        items: [
+            { path: '/supplier/dashboard', icon: <LuLayoutDashboard />, label: 'Dashboard' },
+            { path: '/supplier/profile', icon: <LuUser />, label: 'My Profile' }
+        ]
+    },
+    {
+        title: 'PORTAL SWITCH',
+        items: [
+            ...(user?.has_farmer_profile ? [{ path: '/farmer/dashboard', icon: <LuWheat />, label: 'Farmer Portal' }] : []),
+            ...(user?.user_type === 'consumer' || user?.has_consumer_profile ? [{ path: '/consumer/marketplace', icon: <LuShoppingCart />, label: 'Shop Portal' }] : [])
+        ]
+    },
+    {
+        title: 'CATALOG',
+        items: [
+            { path: '/supplier/products', icon: <LuBoxes />, label: 'Products' },
+            { path: '/supplier/equipment', icon: <LuTractor />, label: 'Equipment' },
+            { path: '/supplier/inventory', icon: <LuWarehouse />, label: 'Inventory' }
+        ]
+    },
+    {
+        title: 'OPERATIONS',
+        items: [
+            { path: '/supplier/orders', icon: <LuClipboardList />, label: 'Orders' },
+            { path: '/supplier/rentals', icon: <LuCalendarCheck />, label: 'Rentals' }
+        ]
+    },
+    {
+        title: 'FINANCE & TOOLS',
+        items: [
+            { path: '/supplier/payments', icon: <LuWallet />, label: 'Payments' },
+            { path: '/supplier/reports', icon: <LuLayoutDashboard />, label: 'Reports' }
+        ]
+    },
+    {
+        title: 'SUPPORT',
+        items: [
+            { path: '/supplier/notifications', icon: <LuBell />, label: 'Notifications' },
+            { path: '/supplier/reviews', icon: <LuStar />, label: 'Reviews' },
+            { path: '/supplier/support', icon: <LuCircleHelp />, label: 'Help' }
+        ]
+    }
+].filter(section => section.items.length > 0);
+
+const SupplierSidebar = ({ isOpen, onToggle }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const [isOpen, setIsOpen] = useState(true);
 
     const handleLogout = async () => {
-        await logout();
-        toast.success('Logged out successfully');
-        navigate('/');
+        try {
+            await logout();
+            toast.success('Logged out successfully');
+            navigate('/');
+        } catch (error) {
+            toast.error('Logout failed');
+        }
     };
 
-    const toggleSidebar = () => {
-        setIsOpen(!isOpen);
-    };
-
-    const menuItems = [
-        { path: '/supplier/dashboard', icon: <FaTachometerAlt />, label: 'Dashboard' },
-        { path: '/supplier/profile', icon: <FaUser />, label: 'My Profile' },
-        { path: '/supplier/products', icon: <FaBoxes />, label: 'Product Management' },
-        { path: '/supplier/equipment', icon: <FaTractor />, label: 'Equipment Management' },
-        { path: '/supplier/orders', icon: <FaClipboardList />, label: 'Orders & Requests' },
-        { path: '/supplier/rentals', icon: <FaCalendarCheck />, label: 'Rentals' },
-        { path: '/supplier/inventory', icon: <FaWarehouse />, label: 'Inventory / Stock' },
-        { path: '/supplier/payments', icon: <FaMoneyBillWave />, label: 'Payments & Earnings' },
-        { path: '/supplier/notifications', icon: <FaBell />, label: 'Notifications' },
-        { path: '/supplier/reviews', icon: <FaStar />, label: 'Ratings & Reviews' },
-        { path: '/supplier/reports', icon: <FaChartBar />, label: 'Reports' },
-        { path: '/supplier/support', icon: <FaQuestionCircle />, label: 'Support / Help' },
-    ];
+    const toggleSidebar = () => onToggle();
 
     return (
         <>
-            {/* Toggle Button for Mobile */}
-            <button className="sidebar-toggle" onClick={toggleSidebar}>
-                {isOpen ? <FaTimes /> : <FaBars />}
+            {/* Mobile Toggle Button */}
+            <button
+                className="sidebar-toggle"
+                onClick={toggleSidebar}
+                aria-label={isOpen ? "Close Menu" : "Open Menu"}
+            >
+                {isOpen ? <LuX size={24} /> : <LuMenu size={24} />}
             </button>
 
-            {/* Sidebar */}
-            <div className={`supplier-sidebar ${isOpen ? 'open' : 'closed'}`}>
-                {/* Desktop Toggle Button - Moved to Edge */}
-                <button className="desktop-toggle-btn" onClick={toggleSidebar} title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}>
-                    {isOpen ? <FaChevronLeft /> : <FaChevronRight />}
+            {/* Supplier Sidebar */}
+            <div className={`supplier-sidebar ${isOpen ? 'open' : 'closed'}`} aria-expanded={isOpen}>
+                {/* Desktop Toggle Button */}
+                <button
+                    className="desktop-toggle-btn"
+                    onClick={toggleSidebar}
+                    aria-label={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+                    title={isOpen ? 'Collapse' : 'Expand'}
+                >
+                    {isOpen ? <LuChevronLeft size={16} /> : <LuChevronRight size={16} />}
                 </button>
 
-                {/* Header */}
-                <div className="sidebar-header">
-                    <div className="sidebar-logo">
-                        <FaTractor className="logo-icon" />
-                        {isOpen && <span className="logo-text">AgriConnect</span>}
-                    </div>
+                <div className="sidebar-content">
+                    {/* Header */}
+                    <div className="sidebar-header">
+                        <div className="sidebar-logo">
+                            <LuTractor className="logo-icon" />
+                            {isOpen && <span className="logo-text animate-fade-in">AgriConnect</span>}
+                        </div>
 
-                    {isOpen && (
                         <div className="sidebar-user">
                             <div className="user-avatar-small">
-                                {user?.username?.charAt(0).toUpperCase()}
+                                {user?.username?.charAt(0).toUpperCase() || 'S'}
                             </div>
-                            <div className="user-details">
-                                <p className="user-name">{user?.username}</p>
-                                <span className="user-badge">Supplier</span>
-                            </div>
+                            {isOpen && (
+                                <div className="user-details animate-fade-in">
+                                    <p className="user-name">{user?.username || 'Supplier'}</p>
+                                    <span className="user-badge">Supplier</span>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </div>
 
-                {/* Navigation Menu */}
-                <nav className="sidebar-nav">
-                    {menuItems.map((item, index) => (
-                        <NavLink
-                            key={index}
-                            to={item.path}
-                            className={({ isActive }) =>
-                                `nav-item ${isActive ? 'active' : ''}`
-                            }
-                            title={!isOpen ? item.label : ''}
-                        >
-                            <span className="nav-icon">{item.icon}</span>
-                            {isOpen && <span className="nav-label">{item.label}</span>}
-                        </NavLink>
-                    ))}
-                </nav>
+                    {/* Navigation Menu */}
+                    <nav className="sidebar-nav">
+                        {NAV_SECTIONS(user).map((section) => (
+                            <div key={section.title} className="nav-section">
+                                <div className="nav-section-title">
+                                    {isOpen ? section.title : section.title.charAt(0)}
+                                </div>
+                                {section.items.map((item) => (
+                                    <NavLink
+                                        key={item.path}
+                                        to={item.path}
+                                        className={({ isActive }) =>
+                                            `nav-item ${isActive ? 'active' : ''}`
+                                        }
+                                        title={!isOpen ? item.label : ''}
+                                    >
+                                        <span className="nav-icon">{item.icon}</span>
+                                        {isOpen && <span className="nav-label animate-fade-in">{item.label}</span>}
+                                    </NavLink>
+                                ))}
+                            </div>
+                        ))}
+                    </nav>
+                </div>
 
                 {/* Logout Button */}
                 <div className="sidebar-footer">
                     <button className="logout-btn" onClick={handleLogout}>
-                        <span className="nav-icon"><FaSignOutAlt /></span>
+                        <LuLogOut className="nav-icon" />
                         {isOpen && <span className="nav-label">Logout</span>}
                     </button>
                 </div>
             </div>
 
-            {/* Overlay for mobile */}
+            {/* Mobile Overlay */}
             {isOpen && <div className="sidebar-overlay" onClick={toggleSidebar}></div>}
         </>
     );
 };
 
-export default SupplierSidebar;
+export default memo(SupplierSidebar);

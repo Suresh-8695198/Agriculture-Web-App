@@ -13,9 +13,11 @@ class ConsumerProfileSerializer(serializers.ModelSerializer):
 
 class ProduceOrderSerializer(serializers.ModelSerializer):
     produce_name = serializers.CharField(source='produce.name', read_only=True)
+    produce_image = serializers.ImageField(source='produce.image', read_only=True)
     farmer_name = serializers.CharField(source='produce.farmer.user.username', read_only=True)
     farmer_phone = serializers.CharField(source='produce.farmer.user.phone_number', read_only=True)
-    
+    consumer_name = serializers.CharField(source='consumer.user.get_full_name', read_only=True)
+
     class Meta:
         model = ProduceOrder
         fields = '__all__'

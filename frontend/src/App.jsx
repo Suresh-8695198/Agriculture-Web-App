@@ -9,7 +9,6 @@ import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import FarmerDashboard from './pages/FarmerDashboard';
-import ConsumerDashboard from './pages/ConsumerDashboard';
 
 // Farmer Portal Layout & Pages
 import FarmerLayout from './pages/FarmerLayout';
@@ -25,6 +24,7 @@ import FarmerNotifications from './pages/farmer/FarmerNotifications';
 import FarmerSupport from './pages/farmer/FarmerSupport';
 
 // Supplier Portal Pages
+import SupplierLayout from './pages/SupplierLayout';
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import SupplierProfile from './pages/supplier/SupplierProfile';
 import ProductManagement from './pages/supplier/ProductManagement';
@@ -38,6 +38,8 @@ import Notifications from './pages/supplier/Notifications';
 import ReviewsManagement from './pages/supplier/ReviewsManagement';
 import Reports from './pages/supplier/Reports';
 import Support from './pages/supplier/Support';
+import ConsumerLayout from './pages/ConsumerLayout';
+import ConsumerDashboard from './pages/ConsumerDashboard';
 
 import { FaClipboardList, FaCalendarCheck, FaWarehouse, FaMoneyBillWave, FaBell, FaStar, FaChartBar, FaQuestionCircle } from 'react-icons/fa';
 
@@ -82,149 +84,82 @@ const AppLayout = () => {
         >
           {/* Default redirect to dashboard */}
           <Route index element={<Navigate to="dashboard" replace />} />
-          
+
           {/* Dashboard */}
           <Route path="dashboard" element={<FarmerDashboard />} />
-          
+
           {/* Profile */}
           <Route path="profile" element={<FarmerProfile />} />
-          
+
           {/* Land Management */}
           <Route path="land-details" element={<LandDetails />} />
-          
+
           {/* Supplier Search */}
           <Route path="search-supplier" element={<SearchSupplier />} />
-          
+
           {/* Shopping */}
           <Route path="buy-products" element={<BuyProducts />} />
-          
+
           {/* Equipment Rental */}
           <Route path="rent-equipment" element={<RentEquipment />} />
-          
+
           {/* Sell Crops */}
           <Route path="sell-produce" element={<SellProduce />} />
-          
+
           {/* Orders */}
           <Route path="orders" element={<OrderTracking />} />
-          
+
           {/* Wallet */}
           <Route path="wallet" element={<Wallet />} />
-          
+
           {/* Notifications */}
           <Route path="notifications" element={<FarmerNotifications />} />
-          
+
           {/* Support */}
           <Route path="support" element={<FarmerSupport />} />
         </Route>
 
         {/* Supplier Portal Routes */}
         <Route
-          path="/supplier/dashboard"
+          path="/supplier"
           element={
             <ProtectedRoute role="supplier">
-              <SupplierDashboard />
+              <SupplierLayout />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/supplier/profile"
-          element={
-            <ProtectedRoute role="supplier">
-              <SupplierProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/supplier/products"
-          element={
-            <ProtectedRoute role="supplier">
-              <ProductManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/supplier/equipment"
-          element={
-            <ProtectedRoute role="supplier">
-              <EquipmentManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/supplier/orders"
-          element={
-            <ProtectedRoute role="supplier">
-              <OrdersManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/supplier/rentals"
-          element={
-            <ProtectedRoute role="supplier">
-              <RentalsManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/supplier/inventory"
-          element={
-            <ProtectedRoute role="supplier">
-              <InventoryManagement />
-            </ProtectedRoute>
-          }
-        />
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<SupplierDashboard />} />
+          <Route path="profile" element={<SupplierProfile />} />
+          <Route path="products" element={<ProductManagement />} />
+          <Route path="equipment" element={<EquipmentManagement />} />
+          <Route path="orders" element={<OrdersManagement />} />
+          <Route path="rentals" element={<RentalsManagement />} />
+          <Route path="inventory" element={<InventoryManagement />} />
+          <Route path="payments" element={<PaymentsManagement />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="reviews" element={<ReviewsManagement />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="support" element={<Support />} />
+        </Route>
 
-
+        {/* Consumer Portal Routes */}
         <Route
-          path="/supplier/payments"
-          element={
-            <ProtectedRoute role="supplier">
-              <PaymentsManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/supplier/notifications"
-          element={
-            <ProtectedRoute role="supplier">
-              <Notifications />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/supplier/reviews"
-          element={
-            <ProtectedRoute role="supplier">
-              <ReviewsManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/supplier/reports"
-          element={
-            <ProtectedRoute role="supplier">
-              <Reports />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/supplier/support"
-          element={
-            <ProtectedRoute role="supplier">
-              <Support />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/consumer/marketplace"
+          path="/consumer"
           element={
             <ProtectedRoute role="consumer">
-              <ConsumerDashboard />
+              <ConsumerLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="marketplace" replace />} />
+          <Route path="marketplace" element={<ConsumerDashboard />} />
+          <Route path="profile" element={<ConsumerDashboard />} /> {/* Using dashboard as placeholder for profile */}
+          <Route path="orders" element={<div>My Orders (Coming Soon)</div>} />
+          <Route path="favorites" element={<div>Favorites (Coming Soon)</div>} />
+          <Route path="cart" element={<div>Shopping Cart (Coming Soon)</div>} />
+          <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
+        </Route>
 
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -232,29 +167,33 @@ const AppLayout = () => {
   );
 };
 
+import { LanguageProvider } from './context/LanguageContext';
+
 function App() {
   const [loaded, setLoaded] = useState(false);
   const handleLoadFinish = useCallback(() => setLoaded(true), []);
 
   return (
-    <AuthProvider>
-      {!loaded && <LoadingScreen onFinish={handleLoadFinish} />}
-      <Router>
-        <AppLayout />
-      </Router>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        {!loaded && <LoadingScreen onFinish={handleLoadFinish} />}
+        <Router>
+          <AppLayout />
+        </Router>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

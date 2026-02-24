@@ -5,6 +5,7 @@
 
 :root {
     --supplier-primary: #5D4037; /* Earth Brown */
+    --supplier-dark: #3E2723;    /* Deep Brown */
     --supplier-accent: #8D6E63;
     --supplier-highlight: #FFB300; /* Gold */
     --supplier-sidebar-bg: #4E342E;
@@ -41,12 +42,27 @@
     color: var(--text-primary);
 }
 
-.portal-main-content {
+/* Layout wrapper - handles sidebar offset */
+.supplier-page-wrapper {
     flex: 1;
-    margin-left: 280px; 
+    margin-left: 280px;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    width: calc(100% - 280px);
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Sidebar collapsed state */
+.supplier-portal-layout.sidebar-closed .supplier-page-wrapper {
+    margin-left: 88px;
+    width: calc(100% - 88px);
+}
+
+/* Page content wrapper - used by individual pages */
+.portal-main-content {
     padding: 2rem;
-    transition: margin-left 0.3s ease;
-    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Animations */
@@ -388,9 +404,17 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-    .portal-main-content {
-        width: 100%;
+    .supplier-page-wrapper {
         margin-left: 0;
+        width: 100%;
+    }
+    
+    .supplier-portal-layout.sidebar-closed .supplier-page-wrapper {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .portal-main-content {
         padding: 1.5rem;
     }
     

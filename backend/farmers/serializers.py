@@ -18,14 +18,24 @@ class FarmProduceSerializer(serializers.ModelSerializer):
     class Meta:
         model = FarmProduce
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['farmer', 'created_at', 'updated_at']
     
     def get_farmer_location(self, obj):
-        return {
-            'latitude': obj.farmer.user.latitude,
-            'longitude': obj.farmer.user.longitude,
-            'address': obj.farmer.user.address
-        }
+        try:
+            return {
+                'latitude': obj.farmer.user.latitude,
+                'longitude': obj.farmer.user.longitude,
+                'address': obj.farmer.user.address
+            }
+        except:
+            return None
+
+    def create(self, validated_data):
+        # Automatically assign the farmer from the request user
+        request = self.context.get('request')
+        if request and hasattr(request.user, 'farmer_profile'):
+            validated_data['farmer'] = request.user.farmer_profile
+        return super().create(validated_data)
 
 
 class SupplierOrderSerializer(serializers.ModelSerializer):

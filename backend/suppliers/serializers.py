@@ -177,11 +177,14 @@ class SupplierDashboardSerializer(serializers.Serializer):
     pending_requests = serializers.IntegerField()
     low_stock_count = serializers.IntegerField()
     total_earnings = serializers.DecimalField(max_digits=10, decimal_places=2)
+    total_equipment = serializers.IntegerField()
+    available_equipment = serializers.IntegerField()
 
 
 class ProductSerializer(serializers.ModelSerializer):
     supplier_name = serializers.CharField(source='supplier.business_name', read_only=True)
     supplier_location = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Product
@@ -205,6 +208,15 @@ class ProductSerializer(serializers.ModelSerializer):
             'pin_code': obj.supplier.pin_code or '',
             'full_address': ', '.join(address_parts) if address_parts else 'Location not specified'
         }
+    
+    def get_image_url(self, obj):
+        """Return absolute URL for product image"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class EquipmentSerializer(serializers.ModelSerializer):
@@ -213,6 +225,7 @@ class EquipmentSerializer(serializers.ModelSerializer):
     equipment_type_display = serializers.CharField(source='get_equipment_type_display', read_only=True)
     condition_display = serializers.CharField(source='get_condition_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    image_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Equipment
@@ -236,6 +249,15 @@ class EquipmentSerializer(serializers.ModelSerializer):
             'pin_code': obj.supplier.pin_code or '',
             'full_address': ', '.join(address_parts) if address_parts else 'Location not specified'
         }
+    
+    def get_image_url(self, obj):
+        """Return absolute URL for equipment image"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -244,6 +266,8 @@ class OrderSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     product_category = serializers.CharField(source='product.category', read_only=True)
     product_image = serializers.ImageField(source='product.image', read_only=True)
+    product_image_url = serializers.SerializerMethodField()
+    supplier_business_name = serializers.CharField(source='supplier.business_name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     payment_status_display = serializers.CharField(source='get_payment_status_display', read_only=True)
     delivery_method_display = serializers.CharField(source='get_delivery_method_display', read_only=True)
@@ -252,6 +276,15 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = '__all__'
         read_only_fields = ['order_number', 'supplier', 'created_at', 'updated_at', 'confirmed_at', 'delivered_at']
+    
+    def get_product_image_url(self, obj):
+        """Return absolute URL for product image in order"""
+        if obj.product and obj.product.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.product.image.url)
+            return obj.product.image.url
+        return None
 
 
 class RentalSerializer(serializers.ModelSerializer):
@@ -260,6 +293,8 @@ class RentalSerializer(serializers.ModelSerializer):
     equipment_name = serializers.CharField(source='equipment.name', read_only=True)
     equipment_type = serializers.CharField(source='equipment.equipment_type', read_only=True)
     equipment_image = serializers.ImageField(source='equipment.image', read_only=True)
+    equipment_image_url = serializers.SerializerMethodField()
+    supplier_name = serializers.CharField(source='supplier.business_name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     payment_status_display = serializers.CharField(source='get_payment_status_display', read_only=True)
     
@@ -267,6 +302,15 @@ class RentalSerializer(serializers.ModelSerializer):
         model = Rental
         fields = '__all__'
         read_only_fields = ['rental_number', 'supplier', 'rental_duration_days', 'created_at', 'updated_at', 'confirmed_at', 'started_at', 'completed_at']
+    
+    def get_equipment_image_url(self, obj):
+        """Return absolute URL for equipment image in rental"""
+        if obj.equipment and obj.equipment.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.equipment.image.url)
+            return obj.equipment.image.url
+        return None
 
 
 class StockLogSerializer(serializers.ModelSerializer):

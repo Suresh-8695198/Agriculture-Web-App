@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
-import SupplierSidebar from '../../components/SupplierSidebar';
 import '../SupplierPortal.css';
 import { toast } from 'react-toastify';
 import {
@@ -81,11 +80,11 @@ const SupplierProfile = () => {
     const handleSaveChanges = async () => {
         try {
             setSaving(true);
-            
+
             // Filter out file fields - they should only be uploaded via separate file upload handler
-            const fileFields = ['id_proof', 'business_license_doc', 'gst_certificate', 
-                               'shop_image', 'equipment_registration'];
-            
+            const fileFields = ['id_proof', 'business_license_doc', 'gst_certificate',
+                'shop_image', 'equipment_registration'];
+
             const dataToSend = { ...formData };
             fileFields.forEach(field => {
                 // Remove file fields if they're URLs (strings) not actual File objects
@@ -93,15 +92,15 @@ const SupplierProfile = () => {
                     delete dataToSend[field];
                 }
             });
-            
+
             await api.patch('/suppliers/profiles/me/', dataToSend);
             toast.success('Profile updated successfully');
             setProfile(formData);
             handleCloseModal();
         } catch (error) {
             console.error('Save failed:', error);
-            const errorMsg = error.response?.data?.details 
-                ? JSON.stringify(error.response.data.details) 
+            const errorMsg = error.response?.data?.details
+                ? JSON.stringify(error.response.data.details)
                 : 'Failed to save changes';
             toast.error(errorMsg);
         } finally {
@@ -245,217 +244,211 @@ const SupplierProfile = () => {
     );
 
     if (loading) return (
-        <div className="supplier-portal-layout">
-            <SupplierSidebar />
-            <div className="portal-main-content">
-                <div className="skeleton-container animate-pulse">
-                    <div className="skeleton-header"></div>
-                    <div className="skeleton-grid">
-                        {[1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="skeleton-card"></div>
-                        ))}
-                    </div>
+        <div className="portal-main-content">
+            <div className="skeleton-container animate-pulse">
+                <div className="skeleton-header"></div>
+                <div className="skeleton-grid">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="skeleton-card"></div>
+                    ))}
                 </div>
             </div>
         </div>
     );
 
     return (
-        <div className="supplier-portal-layout">
-            <SupplierSidebar />
-            <div className="portal-main-content animate-fade-in">
+        <div className="portal-main-content animate-fade-in">
 
-                {/* 1. Header Section */}
-                <div className="profile-header-card mb-4">
-                    <div className="profile-cover"></div>
-                    <div className="profile-identity">
-                        <div className="profile-avatar-container">
-                            <img
-                                src={profile.shop_image || "https://ui-avatars.com/api/?name=" + (profile.shop_name || 'Store') + "&background=8B6F47&color=fff&size=150"}
-                                alt="Shop Logo"
-                                className="profile-avatar"
-                            />
-                            <label className="camera-icon" title="Change Logo">
-                                <FaCamera />
-                                <input type="file" name="shop_image" onChange={handleFileChange} hidden />
-                            </label>
+            {/* 1. Header Section */}
+            <div className="profile-header-card mb-4">
+                <div className="profile-cover"></div>
+                <div className="profile-identity">
+                    <div className="profile-avatar-container">
+                        <img
+                            src={profile.shop_image || "https://ui-avatars.com/api/?name=" + (profile.shop_name || 'Store') + "&background=8B6F47&color=fff&size=150"}
+                            alt="Shop Logo"
+                            className="profile-avatar"
+                        />
+                        <label className="camera-icon" title="Change Logo">
+                            <FaCamera />
+                            <input type="file" name="shop_image" onChange={handleFileChange} hidden />
+                        </label>
+                    </div>
+                    <div className="profile-info-header">
+                        <h2>{profile.shop_name || "New Agri Store"}</h2>
+                        <div className="owner-meta">
+                            <span className="owner-label">Owner</span>
+                            <span className="owner-val">{profile.owner_name || 'Setup Pending'}</span>
+                            <span className="id-badge">ID: {profile.id || '---'}</span>
                         </div>
-                        <div className="profile-info-header">
-                            <h2>{profile.shop_name || "New Agri Store"}</h2>
-                            <div className="owner-meta">
-                                <span className="owner-label">Owner</span>
-                                <span className="owner-val">{profile.owner_name || 'Setup Pending'}</span>
-                                <span className="id-badge">ID: {profile.id || '---'}</span>
-                            </div>
-                            <div className="verification-badges">
-                                <span className={`badge ${profile.verification_status === 'verified' ? 'badge-green' : 'badge-yellow'}`}>
-                                    {profile.verification_status === 'verified' ? <FaCheckCircle /> : <FaInfoCircle />} {profile.verification_status || 'Pending'}
-                                </span>
-                                <span className="badge badge-purple"><FaStar /> {profile.rating} Rating</span>
-                                <span className="badge badge-blue">{profile.subscription_plan || 'Free'} Plan</span>
-                            </div>
+                        <div className="verification-badges">
+                            <span className={`badge ${profile.verification_status === 'verified' ? 'badge-green' : 'badge-yellow'}`}>
+                                {profile.verification_status === 'verified' ? <FaCheckCircle /> : <FaInfoCircle />} {profile.verification_status || 'Pending'}
+                            </span>
+                            <span className="badge badge-purple"><FaStar /> {profile.rating} Rating</span>
+                            <span className="badge badge-blue">{profile.subscription_plan || 'Free'} Plan</span>
                         </div>
-                        <div className="profile-actions">
-                            <div className="stat-card p-3">
-                                <h4 className="m-0">Profile Completion</h4>
-                                <div className="progress-bar-mini" style={{ width: '150px' }}>
-                                    <div className="fill" style={{ width: `${calculateCompletion()}%` }}></div>
-                                </div>
-                                <div className="text-right small mt-1">{calculateCompletion()}%</div>
+                    </div>
+                    <div className="profile-actions">
+                        <div className="stat-card p-3">
+                            <h4 className="m-0">Profile Completion</h4>
+                            <div className="progress-bar-mini" style={{ width: '150px' }}>
+                                <div className="fill" style={{ width: `${calculateCompletion()}%` }}></div>
                             </div>
+                            <div className="text-right small mt-1">{calculateCompletion()}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 2. Masonry Grid Layout for Sections */}
+            <div className="profile-grid-v2">
+
+                {/* Basic Info Card */}
+                <div className="profile-card-modern">
+                    <div className="card-header-modern">
+                        <h3><div className="icon-box blue"><FaUser /></div> Basic Information</h3>
+                        <button className="btn-icon-soft" onClick={() => handleOpenModal('basic', 'Edit Basic Information')}><FaEdit /></button>
+                    </div>
+                    <div className="card-body-modern">
+                        <InfoRow label="Shop Name" value={profile.shop_name} icon={<FaBoxOpen />} />
+                        <InfoRow label="Owner Name" value={profile.owner_name} icon={<FaUser />} />
+                        <InfoRow label="Mobile" value={user?.phone_number} icon={<FaPhone />} />
+                        <InfoRow label="Alt Contact" value={profile.alternate_number} icon={<FaPhone />} />
+                        <InfoRow label="Email" value={user?.email} icon={<FaEnvelope />} />
+                        <InfoRow label="GST Number" value={profile.gst_number} icon={<FaCertificate />} />
+                        <InfoRow label="Experience" value={profile.years_of_experience ? `${profile.years_of_experience} Years` : null} icon={<FaStar />} />
+                    </div>
+                </div>
+
+                {/* Address Card */}
+                <div className="profile-card-modern">
+                    <div className="card-header-modern">
+                        <h3><div className="icon-box green"><FaMapMarkerAlt /></div> Business Address</h3>
+                        <button className="btn-icon-soft" onClick={() => handleOpenModal('address', 'Edit Address')}><FaEdit /></button>
+                    </div>
+                    <div className="card-body-modern">
+                        <InfoRow label="Address" value={profile.address_line_1 ? `${profile.address_line_1} ${profile.address_line_2 || ''}` : null} icon={<FaMapMarkerAlt />} />
+                        <InfoRow label="Village" value={profile.village} icon={<FaGlobe />} />
+                        <InfoRow label="District" value={profile.district} icon={<FaGlobe />} />
+                        <InfoRow label="State" value={profile.state ? `${profile.state} - ${profile.pin_code || ''}` : null} icon={<FaGlobe />} />
+                        <InfoRow label="Landmark" value={profile.landmark} icon={<FaMapMarkerAlt />} />
+                        <InfoRow label="Coordinates" value={profile.latitude ? `${profile.latitude}, ${profile.longitude}` : null} icon={<FaMapMarkerAlt />} />
+                    </div>
+                </div>
+
+                {/* Business Hours Card */}
+                <div className="profile-card-modern">
+                    <div className="card-header-modern">
+                        <h3><div className="icon-box orange"><FaClock /></div> Business Hours</h3>
+                        <button className="btn-icon-soft" onClick={() => handleOpenModal('hours', 'Update Business Hours')}><FaEdit /></button>
+                    </div>
+                    <div className="card-body-modern">
+                        <InfoRow label="Opening Time" value={profile.opening_time} icon={<FaClock />} />
+                        <InfoRow label="Closing Time" value={profile.closing_time} icon={<FaClock />} />
+                        <InfoRow label="Working Days" value={profile.working_days} icon={<FaClock />} />
+                        <InfoRow label="Emergency" value={profile.emergency_contact_available ? "Available" : "Not Available"} icon={<FaPhone />} />
+                    </div>
+                </div>
+
+                {/* Bank Details Card */}
+                <div className="profile-card-modern">
+                    <div className="card-header-modern">
+                        <h3><div className="icon-box purple"><FaUniversity /></div> Bank & Payment</h3>
+                        <button className="btn-icon-soft" onClick={() => handleOpenModal('bank', 'Update Bank Details')}><FaEdit /></button>
+                    </div>
+                    <div className="card-body-modern">
+                        <InfoRow label="Account Name" value={profile.bank_account_holder} icon={<FaUser />} />
+                        <InfoRow label="Bank Name" value={profile.bank_name} icon={<FaUniversity />} />
+                        <InfoRow label="Account No" value={profile.account_number ? "•••• •••• " + profile.account_number.slice(-4) : null} icon={<FaIdCard />} />
+                        <InfoRow label="IFSC Code" value={profile.ifsc_code} icon={<FaIdCard />} />
+                        <InfoRow label="UPI ID" value={profile.upi_id} icon={<FaPhone />} />
+                        <div className={`mt-3 doc-status ${profile.is_bank_verified ? 'uploaded' : 'pending'}`}>
+                            {profile.is_bank_verified ? <><FaCheckCircle /> Bank Verified</> : <><FaInfoCircle /> Verification Pending</>}
                         </div>
                     </div>
                 </div>
 
-                {/* 2. Masonry Grid Layout for Sections */}
-                <div className="profile-grid-v2">
-
-                    {/* Basic Info Card */}
-                    <div className="profile-card-modern">
-                        <div className="card-header-modern">
-                            <h3><div className="icon-box blue"><FaUser /></div> Basic Information</h3>
-                            <button className="btn-icon-soft" onClick={() => handleOpenModal('basic', 'Edit Basic Information')}><FaEdit /></button>
-                        </div>
-                        <div className="card-body-modern">
-                            <InfoRow label="Shop Name" value={profile.shop_name} icon={<FaBoxOpen />} />
-                            <InfoRow label="Owner Name" value={profile.owner_name} icon={<FaUser />} />
-                            <InfoRow label="Mobile" value={user?.phone_number} icon={<FaPhone />} />
-                            <InfoRow label="Alt Contact" value={profile.alternate_number} icon={<FaPhone />} />
-                            <InfoRow label="Email" value={user?.email} icon={<FaEnvelope />} />
-                            <InfoRow label="GST Number" value={profile.gst_number} icon={<FaCertificate />} />
-                            <InfoRow label="Experience" value={profile.years_of_experience ? `${profile.years_of_experience} Years` : null} icon={<FaStar />} />
-                        </div>
+                {/* Service Settings Card */}
+                <div className="profile-card-modern">
+                    <div className="card-header-modern">
+                        <h3><div className="icon-box blue"><FaTruck /></div> Services & Delivery</h3>
+                        <button className="btn-icon-soft" onClick={() => handleOpenModal('services', 'Manage Services')}><FaEdit /></button>
                     </div>
-
-                    {/* Address Card */}
-                    <div className="profile-card-modern">
-                        <div className="card-header-modern">
-                            <h3><div className="icon-box green"><FaMapMarkerAlt /></div> Business Address</h3>
-                            <button className="btn-icon-soft" onClick={() => handleOpenModal('address', 'Edit Address')}><FaEdit /></button>
+                    <div className="card-body-modern">
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {profile.enable_seeds && <span className="badge badge-green">Seed Sales</span>}
+                            {profile.enable_fertilizers && <span className="badge badge-green">Fertilizers</span>}
+                            {profile.enable_manure && <span className="badge badge-green">Organic Manure</span>}
+                            {profile.enable_equipment_rental && <span className="badge badge-blue">Equip Rentals</span>}
+                            {profile.enable_agro_tools && <span className="badge badge-yellow">Agro Tools</span>}
                         </div>
-                        <div className="card-body-modern">
-                            <InfoRow label="Address" value={profile.address_line_1 ? `${profile.address_line_1} ${profile.address_line_2 || ''}` : null} icon={<FaMapMarkerAlt />} />
-                            <InfoRow label="Village" value={profile.village} icon={<FaGlobe />} />
-                            <InfoRow label="District" value={profile.district} icon={<FaGlobe />} />
-                            <InfoRow label="State" value={profile.state ? `${profile.state} - ${profile.pin_code || ''}` : null} icon={<FaGlobe />} />
-                            <InfoRow label="Landmark" value={profile.landmark} icon={<FaMapMarkerAlt />} />
-                            <InfoRow label="Coordinates" value={profile.latitude ? `${profile.latitude}, ${profile.longitude}` : null} icon={<FaMapMarkerAlt />} />
-                        </div>
+                        <InfoRow label="Home Delivery" value={profile.home_delivery_available ? "Enabled" : "Disabled"} icon={<FaTruck />} />
+                        <InfoRow label="Service Radius" value={profile.delivery_radius_km ? `${profile.delivery_radius_km} km` : null} icon={<FaMapMarkerAlt />} />
+                        <InfoRow label="Standard Fee" value={profile.delivery_charges ? `₹${profile.delivery_charges}` : null} icon={<FaSave />} />
                     </div>
+                </div>
 
-                    {/* Business Hours Card */}
-                    <div className="profile-card-modern">
-                        <div className="card-header-modern">
-                            <h3><div className="icon-box orange"><FaClock /></div> Business Hours</h3>
-                            <button className="btn-icon-soft" onClick={() => handleOpenModal('hours', 'Update Business Hours')}><FaEdit /></button>
-                        </div>
-                        <div className="card-body-modern">
-                            <InfoRow label="Opening Time" value={profile.opening_time} icon={<FaClock />} />
-                            <InfoRow label="Closing Time" value={profile.closing_time} icon={<FaClock />} />
-                            <InfoRow label="Working Days" value={profile.working_days} icon={<FaClock />} />
-                            <InfoRow label="Emergency" value={profile.emergency_contact_available ? "Available" : "Not Available"} icon={<FaPhone />} />
-                        </div>
+                {/* Documents Card (Direct Uploads) */}
+                <div className="profile-card-modern">
+                    <div className="card-header-modern">
+                        <h3><div className="icon-box orange"><FaFileContract /></div> Verification Center</h3>
                     </div>
-
-                    {/* Bank Details Card */}
-                    <div className="profile-card-modern">
-                        <div className="card-header-modern">
-                            <h3><div className="icon-box purple"><FaUniversity /></div> Bank & Payment</h3>
-                            <button className="btn-icon-soft" onClick={() => handleOpenModal('bank', 'Update Bank Details')}><FaEdit /></button>
-                        </div>
-                        <div className="card-body-modern">
-                            <InfoRow label="Account Name" value={profile.bank_account_holder} icon={<FaUser />} />
-                            <InfoRow label="Bank Name" value={profile.bank_name} icon={<FaUniversity />} />
-                            <InfoRow label="Account No" value={profile.account_number ? "•••• •••• " + profile.account_number.slice(-4) : null} icon={<FaIdCard />} />
-                            <InfoRow label="IFSC Code" value={profile.ifsc_code} icon={<FaIdCard />} />
-                            <InfoRow label="UPI ID" value={profile.upi_id} icon={<FaPhone />} />
-                            <div className={`mt-3 doc-status ${profile.is_bank_verified ? 'uploaded' : 'pending'}`}>
-                                {profile.is_bank_verified ? <><FaCheckCircle /> Bank Verified</> : <><FaInfoCircle /> Verification Pending</>}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Service Settings Card */}
-                    <div className="profile-card-modern">
-                        <div className="card-header-modern">
-                            <h3><div className="icon-box blue"><FaTruck /></div> Services & Delivery</h3>
-                            <button className="btn-icon-soft" onClick={() => handleOpenModal('services', 'Manage Services')}><FaEdit /></button>
-                        </div>
-                        <div className="card-body-modern">
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                {profile.enable_seeds && <span className="badge badge-green">Seed Sales</span>}
-                                {profile.enable_fertilizers && <span className="badge badge-green">Fertilizers</span>}
-                                {profile.enable_manure && <span className="badge badge-green">Organic Manure</span>}
-                                {profile.enable_equipment_rental && <span className="badge badge-blue">Equip Rentals</span>}
-                                {profile.enable_agro_tools && <span className="badge badge-yellow">Agro Tools</span>}
-                            </div>
-                            <InfoRow label="Home Delivery" value={profile.home_delivery_available ? "Enabled" : "Disabled"} icon={<FaTruck />} />
-                            <InfoRow label="Service Radius" value={profile.delivery_radius_km ? `${profile.delivery_radius_km} km` : null} icon={<FaMapMarkerAlt />} />
-                            <InfoRow label="Standard Fee" value={profile.delivery_charges ? `₹${profile.delivery_charges}` : null} icon={<FaSave />} />
-                        </div>
-                    </div>
-
-                    {/* Documents Card (Direct Uploads) */}
-                    <div className="profile-card-modern">
-                        <div className="card-header-modern">
-                            <h3><div className="icon-box orange"><FaFileContract /></div> Verification Center</h3>
-                        </div>
-                        <div className="card-body-modern">
-                            <div className="documents-grid-v2">
-                                {[
-                                    { key: 'id_proof', label: 'Identity Proof (Aadhar/Voter)', icon: <FaIdCard /> },
-                                    { key: 'business_license_doc', label: 'Business License', icon: <FaFileContract /> },
-                                    { key: 'gst_certificate', label: 'GST Certificate', icon: <FaCertificate /> },
-                                ].map((doc) => (
-                                    <div key={doc.key} className="doc-item-v2">
-                                        <div className="doc-main">
-                                            <div className="doc-icon-small">{doc.icon}</div>
-                                            <div className="doc-meta">
-                                                <span className="doc-name">{doc.label}</span>
-                                                {profile[doc.key] ?
-                                                    <span className="doc-tag verified">Verified</span> :
-                                                    <span className="doc-tag missing">Missing</span>
-                                                }
-                                            </div>
+                    <div className="card-body-modern">
+                        <div className="documents-grid-v2">
+                            {[
+                                { key: 'id_proof', label: 'Identity Proof (Aadhar/Voter)', icon: <FaIdCard /> },
+                                { key: 'business_license_doc', label: 'Business License', icon: <FaFileContract /> },
+                                { key: 'gst_certificate', label: 'GST Certificate', icon: <FaCertificate /> },
+                            ].map((doc) => (
+                                <div key={doc.key} className="doc-item-v2">
+                                    <div className="doc-main">
+                                        <div className="doc-icon-small">{doc.icon}</div>
+                                        <div className="doc-meta">
+                                            <span className="doc-name">{doc.label}</span>
+                                            {profile[doc.key] ?
+                                                <span className="doc-tag verified">Verified</span> :
+                                                <span className="doc-tag missing">Missing</span>
+                                            }
                                         </div>
-                                        <label className="doc-action-btn">
-                                            {profile[doc.key] ? 'Replace' : 'Upload'}
-                                            <input type="file" name={doc.key} onChange={handleFileChange} hidden />
-                                        </label>
                                     </div>
-                                ))}
-                            </div>
+                                    <label className="doc-action-btn">
+                                        {profile[doc.key] ? 'Replace' : 'Upload'}
+                                        <input type="file" name={doc.key} onChange={handleFileChange} hidden />
+                                    </label>
+                                </div>
+                            ))}
                         </div>
                     </div>
-
-                    {/* Notifications Card */}
-                    <div className="profile-card-modern">
-                        <div className="card-header-modern">
-                            <h3><div className="icon-box purple"><FaBell /></div> Stay Updated</h3>
-                            <button className="btn-icon-soft" onClick={() => handleOpenModal('notifications', 'Preferences')}><FaEdit /></button>
-                        </div>
-                        <div className="card-body-modern">
-                            <InfoRow label="Order Alerts" value={profile.notify_orders ? "Instant SMS/App" : "Off"} icon={<FaBell />} />
-                            <InfoRow label="Rental Inquiries" value={profile.notify_rentals ? "Enabled" : "Off"} icon={<FaBell />} />
-                            <InfoRow label="Payment Logs" value={profile.notify_payments ? "Weekly Email" : "Off"} icon={<FaEnvelope />} />
-                        </div>
-                    </div>
-
-                    {/* Security Card */}
-                    <div className="profile-card-modern" style={{ borderColor: '#FCA5A5' }}>
-                        <div className="card-header-modern" style={{ background: '#FEF2F2' }}>
-                            <h3><div className="icon-box red"><FaShieldAlt /></div> Security Zone</h3>
-                        </div>
-                        <div className="card-body-modern">
-                            <button className="btn-secondary-supplier w-100 mb-2">Change Password</button>
-                            <button className="btn-secondary-supplier w-100 mb-2">Enable 2FA</button>
-                            <button className="btn-secondary-supplier w-100" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>
-                                <FaTrash /> Delete Account
-                            </button>
-                        </div>
-                    </div>
-
                 </div>
+
+                {/* Notifications Card */}
+                <div className="profile-card-modern">
+                    <div className="card-header-modern">
+                        <h3><div className="icon-box purple"><FaBell /></div> Stay Updated</h3>
+                        <button className="btn-icon-soft" onClick={() => handleOpenModal('notifications', 'Preferences')}><FaEdit /></button>
+                    </div>
+                    <div className="card-body-modern">
+                        <InfoRow label="Order Alerts" value={profile.notify_orders ? "Instant SMS/App" : "Off"} icon={<FaBell />} />
+                        <InfoRow label="Rental Inquiries" value={profile.notify_rentals ? "Enabled" : "Off"} icon={<FaBell />} />
+                        <InfoRow label="Payment Logs" value={profile.notify_payments ? "Weekly Email" : "Off"} icon={<FaEnvelope />} />
+                    </div>
+                </div>
+
+                {/* Security Card */}
+                <div className="profile-card-modern" style={{ borderColor: '#FCA5A5' }}>
+                    <div className="card-header-modern" style={{ background: '#FEF2F2' }}>
+                        <h3><div className="icon-box red"><FaShieldAlt /></div> Security Zone</h3>
+                    </div>
+                    <div className="card-body-modern">
+                        <button className="btn-secondary-supplier w-100 mb-2">Change Password</button>
+                        <button className="btn-secondary-supplier w-100 mb-2">Enable 2FA</button>
+                        <button className="btn-secondary-supplier w-100" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>
+                            <FaTrash /> Delete Account
+                        </button>
+                    </div>
+                </div>
+
             </div>
 
             {/* MODERN MODAL COMPONENT */}

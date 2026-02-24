@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import ConsumerProfile, ProduceOrder, ProduceReview, Cart
 from .serializers import ConsumerProfileSerializer, ProduceOrderSerializer, ProduceReviewSerializer, CartSerializer
+from notifications.models import Notification
 
 
 class ConsumerProfileViewSet(viewsets.ModelViewSet):
@@ -52,7 +53,25 @@ class ProduceOrderViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         consumer_profile = ConsumerProfile.objects.get(user=self.request.user)
-        serializer.save(consumer=consumer_profile)
+        order = serializer.save(consumer=consumer_profile)
+        
+        # Create notification for consumer
+        Notification.objects.create(
+            user=self.request.user,
+            title="Order Placed",
+            message=f"Your order for {order.produce.name} has been placed successfully.",
+            notification_type='order',
+            related_object_id=f"PORD-{order.id}"
+        )
+        
+        # Create notification for farmer
+        Notification.objects.create(
+            user=order.produce.farmer.user,
+            title="New Sale Received",
+            message=f"You have received a new order for {order.produce.name} from {self.request.user.username}.",
+            notification_type='order',
+            related_object_id=f"PORD-{order.id}"
+        )
     
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):
@@ -65,6 +84,18 @@ class ProduceOrderViewSet(viewsets.ModelViewSet):
         
         order.status = new_status
         order.save()
+        
+        # Create notification for consumer
+        Notification.objects.create(
+            user=order.consumer.user,
+            title="Order Status Updated",
+            message=f"Your order #{order.id} status has been updated to {new_status}.",
+            notification_type='order',
+            related_object_id=f"PORD-{order.id}"
+        )
+        
+        # Create notification for farmer (if status is updated by system or consumer, though usually updated by farmer)
+        # If farmer updates it, they might not need a notification, but it's good for record.
         
         serializer = self.get_serializer(order)
         return Response(serializer.data)

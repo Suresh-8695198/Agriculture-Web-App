@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { FaQuestionCircle, FaPlus, FaTicketAlt, FaSpinner, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import api from '../../api/axios';
-import SupplierSidebar from '../../components/SupplierSidebar';
 import '../SupplierPortal.css';
 import { toast } from 'react-toastify';
 
@@ -127,104 +126,101 @@ const Support = () => {
     };
 
     return (
-        <div className="supplier-portal-layout">
-            <SupplierSidebar />
-            <div className="portal-main-content animate-fade-in">
-                <header className="page-header">
-                    <div>
-                        <h1 className="page-title">Support & Help</h1>
-                        <p className="page-subtitle">Get assistance with your account or orders</p>
-                    </div>
-                    <button
-                        className="btn-primary"
-                        onClick={() => setShowNewTicketForm(!showNewTicketForm)}
-                    >
-                        {showNewTicketForm ? 'Cancel' : <><FaPlus /> New Ticket</>}
-                    </button>
-                </header>
+        <div className="portal-main-content animate-fade-in">
+            <header className="page-header">
+                <div>
+                    <h1 className="page-title">Support & Help</h1>
+                    <p className="page-subtitle">Get assistance with your account or orders</p>
+                </div>
+                <button
+                    className="btn-primary"
+                    onClick={() => setShowNewTicketForm(!showNewTicketForm)}
+                >
+                    {showNewTicketForm ? 'Cancel' : <><FaPlus /> New Ticket</>}
+                </button>
+            </header>
 
-                {showNewTicketForm && (
-                    <div className="content-card mb-4 animate-fade-in">
-                        <div className="card-header">
-                            <h3>Create New Support Ticket</h3>
-                        </div>
-                        <div className="card-body">
-                            <form onSubmit={handleSubmitTicket}>
-                                <div className="form-group">
-                                    <label>Subject</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder="Briefly describe your issue"
-                                        value={newTicket.subject}
-                                        onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Priority</label>
-                                    <select
-                                        className="form-control"
-                                        value={newTicket.priority}
-                                        onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
-                                    >
-                                        <option value="low">Low - General Question</option>
-                                        <option value="medium">Medium - Standard Issue</option>
-                                        <option value="high">High - Urgent Issue</option>
-                                        <option value="critical">Critical - System Failure</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Message</label>
-                                    <textarea
-                                        className="form-control"
-                                        rows="5"
-                                        placeholder="Detailed explanation of your problem..."
-                                        value={newTicket.message}
-                                        onChange={(e) => setNewTicket({ ...newTicket, message: e.target.value })}
-                                        required
-                                    ></textarea>
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="btn-primary"
-                                    disabled={submitting}
+            {showNewTicketForm && (
+                <div className="content-card mb-4 animate-fade-in">
+                    <div className="card-header">
+                        <h3>Create New Support Ticket</h3>
+                    </div>
+                    <div className="card-body">
+                        <form onSubmit={handleSubmitTicket}>
+                            <div className="form-group">
+                                <label>Subject</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Briefly describe your issue"
+                                    value={newTicket.subject}
+                                    onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Priority</label>
+                                <select
+                                    className="form-control"
+                                    value={newTicket.priority}
+                                    onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
                                 >
-                                    {submitting ? <><FaSpinner className="spin" /> Submitting...</> : 'Submit Ticket'}
-                                </button>
-                            </form>
-                        </div>
+                                    <option value="low">Low - General Question</option>
+                                    <option value="medium">Medium - Standard Issue</option>
+                                    <option value="high">High - Urgent Issue</option>
+                                    <option value="critical">Critical - System Failure</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Message</label>
+                                <textarea
+                                    className="form-control"
+                                    rows="5"
+                                    placeholder="Detailed explanation of your problem..."
+                                    value={newTicket.message}
+                                    onChange={(e) => setNewTicket({ ...newTicket, message: e.target.value })}
+                                    required
+                                ></textarea>
+                            </div>
+                            <button
+                                type="submit"
+                                className="btn-primary"
+                                disabled={submitting}
+                            >
+                                {submitting ? <><FaSpinner className="spin" /> Submitting...</> : 'Submit Ticket'}
+                            </button>
+                        </form>
                     </div>
-                )}
+                </div>
+            )}
 
-                <div className="content-grid">
-                    <div className="content-card" style={{ gridColumn: '1 / -1' }}>
-                        <div className="card-header">
-                            <h3><FaTicketAlt /> My Support Tickets</h3>
-                        </div>
-                        <div className="card-body">
-                            {loading ? (
-                                <div className="text-center p-4">Loading tickets...</div>
-                            ) : tickets.length > 0 ? (
-                                <div className="tickets-list">
-                                    {tickets.map((ticket) => (
-                                        <TicketItem key={ticket.id} ticket={ticket} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="empty-state text-center p-5">
-                                    <FaQuestionCircle size={48} color="#D1D5DB" />
-                                    <h3 style={{ marginTop: '1rem', color: '#374151' }}>No Support Tickets</h3>
-                                    <p style={{ color: '#6B7280' }}>You haven't raised any support requests yet.</p>
-                                    <button
-                                        className="btn-secondary mt-3"
-                                        onClick={() => setShowNewTicketForm(true)}
-                                    >
-                                        Raise a Ticket
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+            <div className="content-grid">
+                <div className="content-card" style={{ gridColumn: '1 / -1' }}>
+                    <div className="card-header">
+                        <h3><FaTicketAlt /> My Support Tickets</h3>
+                    </div>
+                    <div className="card-body">
+                        {loading ? (
+                            <div className="text-center p-4">Loading tickets...</div>
+                        ) : tickets.length > 0 ? (
+                            <div className="tickets-list">
+                                {tickets.map((ticket) => (
+                                    <TicketItem key={ticket.id} ticket={ticket} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="empty-state text-center p-5">
+                                <FaQuestionCircle size={48} color="#D1D5DB" />
+                                <h3 style={{ marginTop: '1rem', color: '#374151' }}>No Support Tickets</h3>
+                                <p style={{ color: '#6B7280' }}>You haven't raised any support requests yet.</p>
+                                <button
+                                    className="btn-secondary mt-3"
+                                    onClick={() => setShowNewTicketForm(true)}
+                                >
+                                    Raise a Ticket
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

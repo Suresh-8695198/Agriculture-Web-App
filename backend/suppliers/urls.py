@@ -52,11 +52,23 @@ urlpatterns = [
     path('orders/my_orders/', 
          OrderViewSet.as_view({'get': 'my_orders'}), 
          name='supplier-my-orders'),
+    path('orders/place_order/', 
+         OrderViewSet.as_view({'post': 'place_order'}), 
+         name='farmer-place-order'),
+    path('orders/farmer_orders/', 
+         OrderViewSet.as_view({'get': 'farmer_orders'}), 
+         name='farmer-orders'),
     
     # Rental endpoints
     path('rentals/my_rentals/', 
          RentalViewSet.as_view({'get': 'my_rentals'}), 
          name='supplier-my-rentals'),
+    path('rentals/request_rental/', 
+         RentalViewSet.as_view({'post': 'request_rental'}), 
+         name='farmer-request-rental'),
+    path('rentals/farmer_rentals/', 
+         RentalViewSet.as_view({'get': 'farmer_rentals'}), 
+         name='farmer-rentals'),
     
     # Include router URLs (standard CRUD operations and other actions)
     path('', include(router.urls)),

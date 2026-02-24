@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-8-q+ae9eg_lue943juhfhijokb3w_72jb9i=w*rbj_!0zed-35
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 
 # Application definition
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     
     # Local apps
@@ -63,6 +64,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'agriconnect.middleware.ErrorLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'agriconnect.urls'

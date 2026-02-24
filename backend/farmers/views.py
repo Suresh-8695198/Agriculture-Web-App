@@ -6,6 +6,7 @@ from rest_framework import serializers as rest_serializers
 from math import radians, cos, sin, asin, sqrt
 from .models import FarmerProfile, FarmProduce, SupplierOrder, Land
 from .serializers import FarmerProfileSerializer, FarmProduceSerializer, SupplierOrderSerializer, LandSerializer
+from notifications.models import Notification
 
 
 def haversine(lon1, lat1, lon2, lat2):
@@ -54,27 +55,89 @@ class FarmProduceViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description', 'category']
     ordering_fields = ['price_per_unit', 'created_at']
-    
+
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'search_nearby']:
             return [AllowAny()]
         return [IsAuthenticated()]
-    
+
+    def _get_or_create_farmer_profile(self, user):
+        """Helper: get or auto-create farmer profile for user."""
+        profile, _ = FarmerProfile.objects.get_or_create(
+            user=user,
+            defaults={'farm_name': f"{user.username}'s Farm"}
+        )
+        return profile
+
     def perform_create(self, serializer):
-        farmer_profile = FarmerProfile.objects.get(user=self.request.user)
+        farmer_profile = self._get_or_create_farmer_profile(self.request.user)
         serializer.save(farmer=farmer_profile)
-    
+
+    # ── owner check helper ────────────────────────────────────────
+    def _owned_produce(self, pk, user):
+        """Return produce object if it belongs to the requesting user."""
+        try:
+            produce = FarmProduce.objects.get(pk=pk)
+        except FarmProduce.DoesNotExist:
+            return None, Response({'error': 'Produce not found'}, status=status.HTTP_404_NOT_FOUND)
+        if produce.farmer.user != user:
+            return None, Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+        return produce, None
+
+    # ── my listings (all produce, including drafts) ───────────────
     @action(detail=False, methods=['get'])
     def my_produce(self, request):
-        """Get current farmer's produce"""
+        """Get ALL of current farmer's produce (active + drafts)."""
         try:
             farmer_profile = FarmerProfile.objects.get(user=request.user)
-            produce = FarmProduce.objects.filter(farmer=farmer_profile)
-            serializer = self.get_serializer(produce, many=True)
-            return Response(serializer.data)
         except FarmerProfile.DoesNotExist:
-            return Response({'error': 'Farmer profile not found'}, status=status.HTTP_404_NOT_FOUND)
-    
+            return Response([], status=status.HTTP_200_OK)
+        produce = FarmProduce.objects.filter(farmer=farmer_profile).order_by('-created_at')
+        serializer = self.get_serializer(produce, many=True)
+        return Response(serializer.data)
+
+    # ── toggle availability (pause / resume) ─────────────────────
+    @action(detail=True, methods=['patch'])
+    def toggle_availability(self, request, pk=None):
+        """Toggle is_available for a produce listing (pause/resume)."""
+        produce, err = self._owned_produce(pk, request.user)
+        if err:
+            return err
+        produce.is_available = not produce.is_available
+        produce.save(update_fields=['is_available', 'updated_at'])
+        serializer = self.get_serializer(produce)
+        action_word = 'resumed' if produce.is_available else 'paused'
+        return Response({'message': f'Listing {action_word} successfully.', 'data': serializer.data})
+
+    # ── save as draft (is_available = False) ─────────────────────
+    @action(detail=False, methods=['post'])
+    def save_draft(self, request):
+        """Create a produce listing as a draft (not publicly visible)."""
+        data = request.data.copy()
+        data['is_available'] = False
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        farmer_profile = self._get_or_create_farmer_profile(request.user)
+        serializer.save(farmer=farmer_profile)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # ── bulk delete ───────────────────────────────────────────────
+    @action(detail=False, methods=['delete'])
+    def bulk_delete(self, request):
+        """Delete multiple produce listings by IDs."""
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({'error': 'No IDs provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            farmer_profile = FarmerProfile.objects.get(user=request.user)
+        except FarmerProfile.DoesNotExist:
+            return Response({'error': 'Farmer profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+        deleted_count, _ = FarmProduce.objects.filter(
+            pk__in=ids, farmer=farmer_profile
+        ).delete()
+        return Response({'message': f'{deleted_count} listing(s) deleted.'}, status=status.HTTP_200_OK)
+
+    # ── search nearby (public) ────────────────────────────────────
     @action(detail=False, methods=['get'])
     def search_nearby(self, request):
         """Search produce by location and category"""
@@ -132,7 +195,25 @@ class SupplierOrderViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         farmer_profile = FarmerProfile.objects.get(user=self.request.user)
-        serializer.save(farmer=farmer_profile)
+        order = serializer.save(farmer=farmer_profile)
+        
+        # Create notification for farmer
+        Notification.objects.create(
+            user=self.request.user,
+            title="Order Placed",
+            message=f"Your order for {order.product.name} has been placed successfully.",
+            notification_type='order',
+            related_object_id=f"ORD-{order.id}"
+        )
+        
+        # Create notification for supplier
+        Notification.objects.create(
+            user=order.product.supplier.user,
+            title="New Order Received",
+            message=f"You have received a new order for {order.product.name} from {self.request.user.username}.",
+            notification_type='order',
+            related_object_id=f"ORD-{order.id}"
+        )
     
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):
@@ -145,6 +226,15 @@ class SupplierOrderViewSet(viewsets.ModelViewSet):
         
         order.status = new_status
         order.save()
+        
+        # Create notification for farmer
+        Notification.objects.create(
+            user=order.farmer.user,
+            title="Order Status Updated",
+            message=f"Your order #{order.id} status has been updated to {new_status}.",
+            notification_type='order',
+            related_object_id=f"ORD-{order.id}"
+        )
         
         serializer = self.get_serializer(order)
         return Response(serializer.data)

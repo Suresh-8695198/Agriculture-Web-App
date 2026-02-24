@@ -64,7 +64,7 @@
 }
 
 .navbar-link {
-  color: #374151;
+  color: #111827;
   font-weight: 600;
   font-size: 0.9rem;
   text-decoration: none;
@@ -102,7 +102,7 @@
   align-items: center;
   padding: 0.5rem 1.1rem;
   background: transparent;
-  color: #374151;
+  color: #111827;
   border: 1.5px solid #E5E7EB;
   border-radius: 10px;
   font-weight: 600;
@@ -144,7 +144,7 @@
 .navbar-user-name {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #374151;
+  color: #111827;
 }
 
 /* Responsive */
