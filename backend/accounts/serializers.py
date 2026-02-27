@@ -18,11 +18,46 @@ class UserSerializer(serializers.ModelSerializer):
                   'profile_picture', 'address', 'latitude', 'longitude', 
                   'is_verified', 'created_at', 
                   'has_farmer_profile', 'has_supplier_profile', 'has_consumer_profile', 'farmer_data']
-        read_only_fields = ['id', 'created_at', 'is_verified']
+        read_only_fields = ['id', 'created_at', 'is_verified', 'user_type']
+        extra_kwargs = {
+            'email': {'required': False},
+            'phone_number': {'required': False},
+            'username': {'required': False}
+        }
+
+    def validate_username(self, value):
+        """Validate username is unique, excluding current user"""
+        user = self.instance
+        if user and User.objects.filter(username=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("A user with this username already exists.")
+        elif not user and User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("A user with this username already exists.")
+        return value
+
+    def validate_email(self, value):
+        """Validate email is unique, excluding current user"""
+        if not value:
+            return value
+        user = self.instance
+        if user and User.objects.filter(email=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        elif not user and User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate_phone_number(self, value):
+        """Validate phone number is unique, excluding current user"""
+        user = self.instance
+        if user and User.objects.filter(phone_number=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("A user with this phone number already exists.")
+        elif not user and User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("A user with this phone number already exists.")
+        return value
 
     def get_has_farmer_profile(self, obj):
         return hasattr(obj, 'farmer_profile')
 
+    def get_has_supplier_profile(self, obj):
         return hasattr(obj, 'supplier_profile')
         
     def get_has_consumer_profile(self, obj):
