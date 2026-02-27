@@ -52,7 +52,7 @@ const LandDetails = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Validation
         if (!formData.name || !formData.area || !formData.location) {
             toast.error('Please fill in all required fields');
@@ -72,7 +72,7 @@ const LandDetails = () => {
                 console.log('Create response:', response.data);
                 toast.success('Land added successfully');
             }
-            
+
             // Reset form and refresh list
             resetForm();
             fetchLands();
@@ -81,7 +81,7 @@ const LandDetails = () => {
             console.error('Error response:', error.response?.data);
             console.error('Error status:', error.response?.status);
             console.error('Full error:', JSON.stringify(error.response?.data, null, 2));
-            
+
             // Handle specific error messages
             if (error.response?.data) {
                 const errorData = error.response.data;
@@ -196,15 +196,15 @@ const LandDetails = () => {
                             <div className="land-card-header">
                                 <h3>{land.name}</h3>
                                 <div className="land-actions">
-                                    <button 
-                                        className="icon-btn edit" 
+                                    <button
+                                        className="icon-btn edit"
                                         onClick={() => handleEdit(land)}
                                         title="Edit"
                                     >
                                         <FaEdit />
                                     </button>
-                                    <button 
-                                        className="icon-btn delete" 
+                                    <button
+                                        className="icon-btn delete"
                                         onClick={() => handleDelete(land.id)}
                                         title="Delete"
                                     >
@@ -253,23 +253,23 @@ const LandDetails = () => {
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label>Land Name <span className="required">*</span></label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     name="name"
                                     value={formData.name}
                                     onChange={handleInputChange}
-                                    placeholder="e.g., North Field" 
+                                    placeholder="e.g., North Field"
                                     required
                                 />
                             </div>
                             <div className="form-group">
                                 <label>Area (in acres) <span className="required">*</span></label>
-                                <input 
-                                    type="number" 
+                                <input
+                                    type="number"
                                     name="area"
                                     value={formData.area}
                                     onChange={handleInputChange}
-                                    placeholder="e.g., 5" 
+                                    placeholder="e.g., 5"
                                     step="0.01"
                                     min="0"
                                     required
@@ -277,18 +277,18 @@ const LandDetails = () => {
                             </div>
                             <div className="form-group">
                                 <label>Location <span className="required">*</span></label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     name="location"
                                     value={formData.location}
                                     onChange={handleInputChange}
-                                    placeholder="Village, District" 
+                                    placeholder="Village, District"
                                     required
                                 />
                             </div>
                             <div className="form-group">
                                 <label>Soil Type <span className="required">*</span></label>
-                                <select 
+                                <select
                                     name="soil_type"
                                     value={formData.soil_type}
                                     onChange={handleInputChange}
@@ -304,17 +304,17 @@ const LandDetails = () => {
                             </div>
                             <div className="form-group">
                                 <label>Current Crop</label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     name="current_crop"
                                     value={formData.current_crop}
                                     onChange={handleInputChange}
-                                    placeholder="e.g., Rice, Wheat" 
+                                    placeholder="e.g., Rice, Wheat"
                                 />
                             </div>
                             <div className="form-group">
                                 <label>Irrigation Type</label>
-                                <select 
+                                <select
                                     name="irrigation_type"
                                     value={formData.irrigation_type}
                                     onChange={handleInputChange}
@@ -329,7 +329,7 @@ const LandDetails = () => {
                             </div>
                             <div className="form-group">
                                 <label>Notes</label>
-                                <textarea 
+                                <textarea
                                     name="notes"
                                     value={formData.notes}
                                     onChange={handleInputChange}
@@ -338,9 +338,9 @@ const LandDetails = () => {
                                 />
                             </div>
                             <div className="form-actions">
-                                <button 
-                                    type="button" 
-                                    className="farmer-btn-secondary" 
+                                <button
+                                    type="button"
+                                    className="farmer-btn-secondary"
                                     onClick={resetForm}
                                 >
                                     Cancel

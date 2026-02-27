@@ -23,21 +23,21 @@ const SearchSupplier = () => {
             setLoading(true);
             let url = '/suppliers/profiles/search_nearby/';
             const params = new URLSearchParams();
-            
+
             if (lat && lon) {
                 params.append('latitude', lat);
                 params.append('longitude', lon);
                 params.append('max_distance', searchRadius);
             }
-            
+
             if (selectedBusinessType && selectedBusinessType !== 'all') {
                 params.append('business_type', selectedBusinessType);
             }
-            
+
             if (params.toString()) {
                 url += `?${params.toString()}`;
             }
-            
+
             const response = await api.get(url);
             setSuppliers(response.data);
         } catch (error) {
@@ -134,7 +134,7 @@ const SearchSupplier = () => {
                 <div className="search-filters">
                     <div className="filter-group">
                         <label>Business Type</label>
-                        <select 
+                        <select
                             value={selectedBusinessType}
                             onChange={(e) => {
                                 setSelectedBusinessType(e.target.value);
@@ -155,7 +155,7 @@ const SearchSupplier = () => {
                     </div>
                     <div className="filter-group">
                         <label>Search Radius</label>
-                        <select 
+                        <select
                             value={searchRadius}
                             onChange={(e) => {
                                 setSearchRadius(Number(e.target.value));
@@ -172,15 +172,15 @@ const SearchSupplier = () => {
                         </select>
                     </div>
                 </div>
-                
+
                 <div className="search-actions">
-                    <button 
+                    <button
                         className="location-btn"
                         onClick={handleUseCurrentLocation}
                     >
                         <MdLocationOn /> Use Current Location
                     </button>
-                    <button 
+                    <button
                         className="farmer-btn-primary"
                         onClick={handleSearch}
                     >
@@ -245,7 +245,7 @@ const SearchSupplier = () => {
                                     )}
                                 </div>
                                 <div className="supplier-actions">
-                                    <button 
+                                    <button
                                         className="call-btn"
                                         onClick={() => handleCall(supplier.user?.phone_number, supplier.business_name)}
                                         disabled={!supplier.is_active || !supplier.user?.phone_number}

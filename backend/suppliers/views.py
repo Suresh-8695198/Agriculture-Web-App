@@ -218,26 +218,28 @@ class SupplierProfileViewSet(viewsets.ModelViewSet):
 
 class ProductViewSet(viewsets.ModelViewSet):
     """ViewSet for products"""
-    queryset = Product.objects.filter(is_available=True)
+    # Use select_related to avoid N+1 queries when serializer accesses supplier fields
+    queryset = Product.objects.filter(is_available=True).select_related('supplier', 'supplier__user')
     serializer_class = ProductSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description', 'category']
     ordering_fields = ['price', 'created_at']
-    
+
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'search_nearby']:
             return [AllowAny()]
         return [IsAuthenticated()]
-    
+
     def perform_create(self, serializer):
         supplier_profile = get_or_create_supplier_profile(self.request.user)
         serializer.save(supplier=supplier_profile)
-    
+
     @action(detail=False, methods=['get'])
     def my_products(self, request):
-        """Get current supplier's products - auto-creates profile if needed"""
+        """Get current supplier's products (all statuses) - auto-creates profile if needed"""
         supplier_profile = get_or_create_supplier_profile(request.user)
-        products = Product.objects.filter(supplier=supplier_profile)
+        # Suppliers see ALL their products (available + unavailable) so they can manage them
+        products = Product.objects.filter(supplier=supplier_profile).select_related('supplier', 'supplier__user')
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
     
@@ -354,28 +356,31 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 class EquipmentViewSet(viewsets.ModelViewSet):
     """ViewSet for equipment"""
-    queryset = Equipment.objects.filter(is_available=True)
+    # Farmer browse: only available equipment; select_related to avoid N+1 queries
+    queryset = Equipment.objects.filter(is_available=True, status='available').select_related('supplier', 'supplier__user')
     serializer_class = EquipmentSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description', 'equipment_type', 'brand']
     ordering_fields = ['daily_rate', 'created_at', 'rating']
-    
+
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'search_nearby']:
             return [AllowAny()]
         return [IsAuthenticated()]
-    
+
     def perform_create(self, serializer):
         supplier_profile = get_or_create_supplier_profile(self.request.user)
         serializer.save(supplier=supplier_profile)
-    
+
     @action(detail=False, methods=['get'], url_path='my_equipment')
     def my_equipment(self, request):
-        """Get current supplier's equipment - auto-creates profile if needed"""
+        """Get current supplier's equipment (all statuses) - auto-creates profile if needed"""
         supplier_profile = get_or_create_supplier_profile(request.user)
-        equipment = Equipment.objects.filter(supplier=supplier_profile)
+        # Suppliers see ALL their equipment so they can manage status, availability, etc.
+        equipment = Equipment.objects.filter(supplier=supplier_profile).select_related('supplier', 'supplier__user')
         serializer = self.get_serializer(equipment, many=True)
         return Response(serializer.data)
+
     
     @action(detail=False, methods=['get'])
     def search_nearby(self, request):

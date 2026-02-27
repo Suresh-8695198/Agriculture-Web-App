@@ -56,7 +56,9 @@ const ProductManagement = () => {
     const fetchProducts = async () => {
         try {
             const response = await api.get('suppliers/products/my_products/');
-            setProducts(response.data);
+            // Handle both paginated { results: [...] } and plain array responses
+            const data = response.data?.results ?? response.data;
+            setProducts(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch products:', error);
             toast.error('Failed to load products');
@@ -238,7 +240,7 @@ const ProductManagement = () => {
                             {/* Product Image */}
                             <div style={{
                                 height: '200px',
-                                background: product.image ? `url(${product.image})` : 'linear-gradient(135deg, #8B6F47 0%, #5D4A30 100%)',
+                                background: (product.image_url || product.image) ? `url(${product.image_url || product.image})` : 'linear-gradient(135deg, #8B6F47 0%, #5D4A30 100%)',
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center',
                                 display: 'flex',
@@ -246,7 +248,7 @@ const ProductManagement = () => {
                                 justifyContent: 'center',
                                 position: 'relative'
                             }}>
-                                {!product.image && <FaBox style={{ fontSize: '3rem', color: 'white', opacity: 0.5 }} />}
+                                {!(product.image_url || product.image) && <FaBox style={{ fontSize: '3rem', color: 'white', opacity: 0.5 }} />}
                                 <div style={{
                                     position: 'absolute',
                                     top: '0.75rem',

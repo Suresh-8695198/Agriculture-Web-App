@@ -107,6 +107,29 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user
 
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        data = request.data
+        
+        # Also handle farmer_profile updates if applicable
+        if hasattr(user, 'farmer_profile'):
+            profile = user.farmer_profile
+            farmer_fields = [
+                'dob', 'gender', 'farm_name', 'farm_size', 'crops_grown', 'soil_type', 'irrigation_type',
+                'bank_name', 'upi_id', 'pan_number', 'dark_mode', 'interface_language',
+                'notif_order', 'notif_whatsapp', 'notif_market'
+            ]
+            for field in farmer_fields:
+                if field in data:
+                    # Boolean fixes from string true/false
+                    val = data[field]
+                    if val in ['true', 'True']: val = True
+                    elif val in ['false', 'False']: val = False
+                    setattr(profile, field, val)
+            profile.save()
+            
+        return super().update(request, *args, **kwargs)
+
 
 class ChangePasswordView(APIView):
     """API endpoint for changing password"""

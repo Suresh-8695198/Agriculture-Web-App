@@ -10,22 +10,45 @@ class UserSerializer(serializers.ModelSerializer):
     has_supplier_profile = serializers.SerializerMethodField()
     has_consumer_profile = serializers.SerializerMethodField()
     
+    farmer_data = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'phone_number', 'user_type', 
                   'profile_picture', 'address', 'latitude', 'longitude', 
                   'is_verified', 'created_at', 
-                  'has_farmer_profile', 'has_supplier_profile', 'has_consumer_profile']
+                  'has_farmer_profile', 'has_supplier_profile', 'has_consumer_profile', 'farmer_data']
         read_only_fields = ['id', 'created_at', 'is_verified']
 
     def get_has_farmer_profile(self, obj):
         return hasattr(obj, 'farmer_profile')
 
-    def get_has_supplier_profile(self, obj):
         return hasattr(obj, 'supplier_profile')
         
     def get_has_consumer_profile(self, obj):
         return hasattr(obj, 'consumer_profile')
+
+    def get_farmer_data(self, obj):
+        if hasattr(obj, 'farmer_profile'):
+            profile = obj.farmer_profile
+            return {
+                'dob': profile.dob,
+                'gender': profile.gender,
+                'farm_name': profile.farm_name,
+                'farm_size': profile.farm_size,
+                'crops_grown': profile.crops_grown,
+                'soil_type': profile.soil_type,
+                'irrigation_type': profile.irrigation_type,
+                'bank_name': profile.bank_name,
+                'upi_id': profile.upi_id,
+                'pan_number': profile.pan_number,
+                'dark_mode': profile.dark_mode,
+                'interface_language': profile.interface_language,
+                'notif_order': profile.notif_order,
+                'notif_whatsapp': profile.notif_whatsapp,
+                'notif_market': profile.notif_market,
+            }
+        return None
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

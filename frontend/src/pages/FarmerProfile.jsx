@@ -2,305 +2,371 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import {
-    FaUser, FaSave, FaTimes, FaEdit, FaPhone, FaEnvelope,
-    FaMapMarkerAlt, FaGlobe, FaCheckCircle, FaTractor, FaBoxOpen, FaSeedling
+    FaUser, FaPhone, FaEnvelope, FaCalendarAlt, FaVenusMars,
+    FaHome, FaLeaf, FaSeedling, FaWater, FaVial, FaCheckCircle,
+    FaStore, FaUniversity, FaIdCard, FaGlobe, FaMoon, FaBell,
+    FaLock, FaTrophy, FaTractor, FaBoxOpen, FaEdit, FaSave, FaTimes,
+    FaCoins, FaChartLine, FaCog, FaShieldAlt
 } from 'react-icons/fa';
-import { LuLogOut, LuSettings, LuBell } from "react-icons/lu";
+import { LuLogOut, LuShieldCheck, LuSmartphone } from "react-icons/lu";
 import { toast } from 'react-toastify';
 import api from '../api/axios';
-import './farmer/FarmerPages.css';
+import './farmer/FarmerProfile.css';
 
 const FarmerProfile = () => {
     const { user, setUser, logout } = useAuth();
     const { t, changeLanguage, language } = useLanguage();
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [editData, setEditData] = useState({
+
+    // Extended state for all profile sections
+    const fd = user?.farmer_data || {};
+    const [formData, setFormData] = useState({
+        // Personal
         username: user?.username || '',
-        email: user?.email || '',
         phone_number: user?.phone_number || '',
-        address: user?.address || ''
+        email: user?.email || '',
+        dob: fd.dob || '',
+        gender: fd.gender || 'Male',
+
+        // Farm Details
+        farm_name: fd.farm_name || '',
+        farm_size: fd.farm_size || '',
+        crops_grown: fd.crops_grown || '',
+        soil_type: fd.soil_type || '',
+        irrigation_type: fd.irrigation_type || '',
+
+        // Business
+        pan_number: fd.pan_number || '',
+
+        // Bank
+        bank_name: fd.bank_name || '',
+        upi_id: fd.upi_id || '',
+
+        // Settings
+        darkMode: fd.dark_mode || false,
+        language: fd.interface_language || 'en',
+
+        // Notifications
+        notif_order: fd.notif_order ?? true,
+        notif_whatsapp: fd.notif_whatsapp ?? true,
+        notif_market: fd.notif_market ?? true
     });
 
     const handleChange = (e) => {
-        setEditData({ ...editData, [e.target.name]: e.target.value });
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
     };
 
-    const handleEditClick = () => {
-        setEditData({
-            username: user?.username || '',
-            email: user?.email || '',
-            phone_number: user?.phone_number || '',
-            address: user?.address || ''
-        });
-        setIsEditing(true);
+    const handleToggle = (name) => {
+        setFormData(prev => ({
+            ...prev,
+            [name]: !prev[name]
+        }));
     };
 
-    const handleCancelEdit = () => {
-        setIsEditing(false);
-        setEditData({
-            username: user?.username || '',
-            email: user?.email || '',
-            phone_number: user?.phone_number || '',
-            address: user?.address || ''
-        });
-    };
-
-    const handleSaveProfile = async () => {
+    const handleSave = async () => {
         setSaving(true);
         try {
-            const response = await api.patch('accounts/profile/', editData);
+            // Send all frontend data to backend
+            const payload = {
+                username: formData.username,
+                email: formData.email,
+                phone_number: formData.phone_number,
+                dob: formData.dob,
+                gender: formData.gender,
+                farm_name: formData.farm_name,
+                farm_size: formData.farm_size,
+                crops_grown: formData.crops_grown,
+                soil_type: formData.soil_type,
+                irrigation_type: formData.irrigation_type,
+                bank_name: formData.bank_name,
+                upi_id: formData.upi_id,
+                pan_number: formData.pan_number,
+                dark_mode: formData.darkMode,
+                interface_language: formData.language,
+                notif_order: formData.notif_order,
+                notif_whatsapp: formData.notif_whatsapp,
+                notif_market: formData.notif_market
+            };
+            const response = await api.patch('accounts/profile/', payload);
             setUser(response.data);
             setIsEditing(false);
-            toast.success('Profile updated successfully!');
+            toast.success('Enterprise profile updated successfully!');
         } catch (error) {
-            console.error('Profile update error:', error);
-            toast.error('Failed to update profile. Please try again.');
+            console.error('Update error:', error);
+            toast.error('Failed to update profile.');
         } finally {
             setSaving(false);
         }
     };
 
-    if (!user) {
-        return <div className="adv-loading">Loading Profile...</div>;
-    }
+    if (!user) return <div className="ent-loading">Preparing your farm profile...</div>;
 
     const availableLanguages = [
         { code: 'en', label: 'English' },
-        { code: 'hi', label: 'हिन्दी' },
-        { code: 'ta', label: 'தமிழ்' },
-        { code: 'te', label: 'తెలుగు' },
-        { code: 'kn', label: 'ಕನ್ನಡ' }
+        { code: 'hi', label: 'Hindi' },
+        { code: 'ta', label: 'Tamil' },
+        { code: 'te', label: 'Telugu' },
+        { code: 'kn', label: 'Kannada' }
     ];
 
     return (
-        <div className="adv-dashboard-container">
-            {/* 1️⃣ HEADER */}
-            <header className="adv-header">
-                <div>
-                    <h1>{t('profile.title')}</h1>
-                    <p className="adv-subtitle">{t('profile.subtitle')}</p>
-                </div>
-                <div className="adv-header-actions">
-                    <button className="adv-btn-secondary" style={{ marginRight: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <LuBell /> {t('profile.notifications')}
-                    </button>
-                    <div className="adv-profile-pill">
-                        {user?.username?.charAt(0).toUpperCase()}
+        <div className="profile-container animate-fade-in" style={{ background: '#f8fafc', minHeight: '100vh' }}>
+            {/* 🎯 HEADER - Glassmorphic Branding */}
+            <div className="profile-header-card">
+                <div className="profile-avatar-wrapper">
+                    <img
+                        src="/assets/images/farmer_profile.png"
+                        alt="Profile"
+                        className="profile-avatar-large"
+                        onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=" + user.username + "&background=1e293b&color=fff&size=80&rounded=12" }}
+                    />
+                    <div className="verification-badge">
+                        <FaCheckCircle size={10} />
                     </div>
                 </div>
-            </header>
 
-            {/* MAIN GRID */}
-            <div className="adv-grid-layout">
+                <div className="profile-header-info">
+                    <div className="profile-role-tag">Elite Farmer Member</div>
+                    <h1 className="profile-name">{user.username}</h1>
+                    <p className="profile-meta">
+                        <FaGlobe size={13} /> Sector: Punjab North • <FaCalendarAlt size={13} /> Digital Farm ID: #{String(user.id || '882').padStart(6, '0')}
+                    </p>
+                </div>
 
-                {/* 2️⃣ LEFT COLUMN: IDENTITY CARD */}
-                <div className="adv-card" style={{ gridColumn: 'span 4', textAlign: 'center', alignItems: 'center' }}>
-                    <div className="profile-agri-avatar-container" style={{ position: 'relative', margin: '20px 0' }}>
-                        <div className="profile-agri-avatar" style={{
-                            width: '120px', height: '120px', borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #43A047, #66BB6A)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '3rem', color: 'white', fontWeight: 'bold',
-                            border: '4px solid #E8F5E9', boxShadow: '0 8px 24px rgba(46, 125, 50, 0.2)'
-                        }}>
-                            {user?.username?.charAt(0).toUpperCase()}
+                <div className="profile-header-actions">
+                    {!isEditing ? (
+                        <button className="btn-premium-sm" onClick={() => setIsEditing(true)}>
+                            <FaEdit size={14} /> Configure Profile
+                        </button>
+                    ) : (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button className="btn-premium-sm" style={{ background: '#22c55e' }} onClick={handleSave} disabled={saving}>
+                                <FaSave size={14} /> {saving ? 'Applying...' : 'Apply Changes'}
+                            </button>
+                            <button className="btn-premium-outline-sm" onClick={() => setIsEditing(false)}>
+                                Close
+                            </button>
                         </div>
-                        <div style={{
-                            position: 'absolute', bottom: '5px', right: '5px',
-                            background: '#fff', borderRadius: '50%', padding: '8px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                        }}>
-                            <FaCheckCircle color="#2E7D32" size={20} />
-                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="profile-main-grid">
+
+                {/* 📝 IDENTITY */}
+                <div className="section-card" style={{ gridColumn: 'span 5' }}>
+                    <div className="section-header">
+                        <h2 className="section-title"><FaUser className="section-icon" /> Identity</h2>
                     </div>
 
-                    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#1B5E20' }}>{user?.username}</h2>
-                    <span className="adv-status-badge completed" style={{ fontSize: '0.9rem', padding: '4px 12px' }}>
-                        {t('profile.verified')}
-                    </span>
+                    <div className="data-fields-grid">
+                        <div className="data-field">
+                            <div className="field-content">
+                                <span className="field-label">Legal Name</span>
+                                {isEditing ? <input name="username" value={formData.username} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px' }} /> : <span className="field-value">{formData.username}</span>}
+                            </div>
+                        </div>
+                        <div className="data-field">
+                            <div className="field-content">
+                                <span className="field-label">Mobile</span>
+                                {isEditing ? <input name="phone_number" value={formData.phone_number} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px' }} /> : <span className="field-value">{formData.phone_number}</span>}
+                            </div>
+                        </div>
+                        <div className="data-field">
+                            <div className="field-content">
+                                <span className="field-label">Email</span>
+                                {isEditing ? <input name="email" value={formData.email} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px' }} /> : <span className="field-value">{formData.email}</span>}
+                            </div>
+                        </div>
+                        <div className="data-field">
+                            <div className="field-content">
+                                <span className="field-label">Birth</span>
+                                {isEditing ? <input type="date" name="dob" value={formData.dob} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px' }} /> : <span className="field-value">{formData.dob || 'Not Set'}</span>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <div style={{ marginTop: '2rem', width: '100%', textAlign: 'left' }}>
-                        <h4 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
-                            <FaGlobe style={{ marginRight: '8px', color: '#2E7D32' }} /> {t('profile.language')}
-                        </h4>
-                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                            {availableLanguages.map((lang) => (
-                                <button
+                {/* 🌾 ASSETS */}
+                <div className="section-card" style={{ gridColumn: 'span 7' }}>
+                    <div className="section-header">
+                        <h2 className="section-title"><FaLeaf className="section-icon" /> Farm Assets</h2>
+                    </div>
+                    <div className="data-fields-grid">
+                        <div className="data-field">
+                            <div className="field-content">
+                                <span className="field-label">Entity Name</span>
+                                {isEditing ? <input name="farm_name" value={formData.farm_name} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px' }} /> : <span className="field-value">{formData.farm_name || 'Not Set'}</span>}
+                            </div>
+                        </div>
+                        <div className="data-field">
+                            <div className="field-content">
+                                <span className="field-label">Holding Size (Acres)</span>
+                                {isEditing ? <input type="number" step="0.1" name="farm_size" value={formData.farm_size} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px' }} /> : <span className="field-value">{formData.farm_size ? `${formData.farm_size} Acres` : 'Not Set'}</span>}
+                            </div>
+                        </div>
+                        <div className="data-field">
+                            <div className="field-content">
+                                <span className="field-label">Primary Produce</span>
+                                {isEditing ? <input name="crops_grown" value={formData.crops_grown} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px' }} placeholder="e.g. Rice, Wheat" /> : <span className="field-value">{formData.crops_grown || 'Not Set'}</span>}
+                            </div>
+                        </div>
+                        <div className="data-field">
+                            <div className="field-content">
+                                <span className="field-label">Soil Profile</span>
+                                {isEditing ? <input name="soil_type" value={formData.soil_type} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px' }} /> : <span className="field-value">{formData.soil_type || 'Not Set'}</span>}
+                            </div>
+                        </div>
+                        <div className="data-field">
+                            <div className="field-content">
+                                <span className="field-label">Irrigation</span>
+                                {isEditing ? <input name="irrigation_type" value={formData.irrigation_type} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px' }} /> : <span className="field-value">{formData.irrigation_type || 'Not Set'}</span>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 🏦 FINTECH */}
+                <div className="section-card" style={{ gridColumn: 'span 4' }}>
+                    <div className="section-header">
+                        <h2 className="section-title"><FaUniversity className="section-icon" /> Fintech</h2>
+                    </div>
+                    <div className="settings-list">
+                        <div className="doc-item">
+                            <div className="field-content" style={{ width: '100%' }}>
+                                <span className="field-label">Primary Bank</span>
+                                {isEditing ? <input name="bank_name" value={formData.bank_name} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px', width: '100%' }} /> : <span className="field-value" style={{ fontSize: '11px' }}>{formData.bank_name || 'Not Set'}</span>}
+                            </div>
+                        </div>
+                        <div className="doc-item">
+                            <div className="field-content" style={{ width: '100%' }}>
+                                <span className="field-label">UPI Interface</span>
+                                {isEditing ? <input name="upi_id" value={formData.upi_id} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px', width: '100%' }} /> : <span className="field-value" style={{ color: '#2E7D32', fontSize: '11px' }}>{formData.upi_id || 'Not Set'}</span>}
+                            </div>
+                        </div>
+                        <div className="doc-item">
+                            <div className="field-content" style={{ width: '100%' }}>
+                                <span className="field-label">TIN/PAN</span>
+                                {isEditing ? <input name="pan_number" value={formData.pan_number} onChange={handleChange} className="form-input" style={{ fontSize: '14px', padding: '4px 8px', width: '100%' }} /> : <span className="field-value" style={{ fontSize: '11px' }}>{formData.pan_number || 'Not Set'}</span>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 🛡️ TRUST SCORE */}
+                <div className="section-card" style={{ gridColumn: 'span 4' }}>
+                    <div className="section-header">
+                        <h2 className="section-title"><FaIdCard className="section-icon" /> Documents</h2>
+                    </div>
+                    <div className="document-grid">
+                        <div className="doc-item">
+                            <span className="doc-name">National ID</span>
+                            <span className="status-indicator verified">Active</span>
+                        </div>
+                        <div className="doc-item">
+                            <span className="doc-name">Title Deed</span>
+                            <span className="status-indicator verified">Active</span>
+                        </div>
+                        <div className="doc-item">
+                            <span className="doc-name">Passbook</span>
+                            <span className="status-indicator verified">Active</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 📊 PERFORMANCE */}
+                <div className="section-card" style={{ gridColumn: 'span 4' }}>
+                    <div className="section-header">
+                        <h2 className="section-title"><FaChartLine className="section-icon" /> Metrics</h2>
+                    </div>
+                    <div className="stats-grid">
+                        <div className="stat-box">
+                            <span className="stat-number">12</span>
+                            <span className="stat-label">Sales</span>
+                        </div>
+                        <div className="stat-box">
+                            <span className="stat-number">03</span>
+                            <span className="stat-label">Rents</span>
+                        </div>
+                        <div className="stat-box">
+                            <span className="stat-number">₹45k</span>
+                            <span className="stat-label">Volume</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ⚙️ CONFIG */}
+                <div className="section-card" style={{ gridColumn: 'span 6' }}>
+                    <div className="section-header">
+                        <h2 className="section-title"><FaCog className="section-icon" /> System Config</h2>
+                    </div>
+                    <div style={{ marginBottom: '0.75rem' }}>
+                        <span className="field-label" style={{ display: 'block', marginBottom: '6px' }}>Interface Language</span>
+                        <div className="lang-selector">
+                            {availableLanguages.map(lang => (
+                                <div
                                     key={lang.code}
-                                    className={`adv-btn-secondary ${language === lang.code ? 'active' : ''}`}
-                                    style={{
-                                        background: language === lang.code ? '#2E7D32' : '#f0f0f0',
-                                        color: language === lang.code ? '#fff' : '#333',
-                                        border: 'none'
-                                    }}
+                                    className={`lang-option ${language === lang.code ? 'active' : ''}`}
                                     onClick={() => changeLanguage(lang.code)}
                                 >
                                     {lang.label}
-                                </button>
+                                </div>
                             ))}
                         </div>
                     </div>
 
-                    <div style={{ marginTop: 'auto', width: '100%', paddingTop: '2rem' }}>
+                    <div className="settings-list">
+                        <div className="setting-item">
+                            <span className="setting-label">Atmospheric Mode</span>
+                            <div className={`toggle-switch ${formData.darkMode ? 'active' : ''}`} onClick={() => handleToggle('darkMode')}>
+                                <div className="toggle-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 🔔 ALERTS */}
+                <div className="section-card" style={{ gridColumn: 'span 6' }}>
+                    <div className="section-header">
+                        <h2 className="section-title"><FaBell className="section-icon" /> Alerts</h2>
+                    </div>
+                    <div className="settings-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' }}>
+                        <div className="setting-item">
+                            <span className="setting-label">Push Stream</span>
+                            <div className={`toggle-switch ${formData.notif_order ? 'active' : ''}`} onClick={() => handleToggle('notif_order')}><div className="toggle-knob"></div></div>
+                        </div>
+                        <div className="setting-item">
+                            <span className="setting-label">WhatsApp Sync</span>
+                            <div className={`toggle-switch ${formData.notif_whatsapp ? 'active' : ''}`} onClick={() => handleToggle('notif_whatsapp')}><div className="toggle-knob"></div></div>
+                        </div>
+                        <div className="setting-item">
+                            <span className="setting-label">Market Pulse</span>
+                            <div className={`toggle-switch ${formData.notif_market ? 'active' : ''}`} onClick={() => handleToggle('notif_market')}><div className="toggle-knob"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 🔒 CORE SECURITY */}
+                <div className="section-card" style={{ gridColumn: 'span 12' }}>
+                    <div className="section-header">
+                        <h2 className="section-title"><FaLock className="section-icon" /> Security Protocol</h2>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <button className="btn-premium-outline-sm">Reset Credentials</button>
+                        <button className="btn-premium-outline-sm">MFA Token</button>
+                        <button className="btn-premium-outline-sm">Session Map</button>
                         <button
-                            className="adv-btn-secondary"
-                            style={{ width: '100%', color: '#d32f2f', borderColor: '#d32f2f', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                            className="btn-danger-outline-sm"
+                            style={{ marginLeft: 'auto' }}
                             onClick={logout}
                         >
-                            <LuLogOut /> {t('profile.logout')}
+                            <LuLogOut /> Terminate Session
                         </button>
-                    </div>
-                </div>
-
-                {/* 3️⃣ RIGHT COLUMN: EDITABLE DETAILS */}
-                <div className="adv-card" style={{ gridColumn: 'span 8' }}>
-                    <div className="adv-card-header">
-                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><FaUser style={{ color: '#2E7D32' }} /> {t('profile.personalInfo')}</h3>
-                        {!isEditing && (
-                            <button
-                                className="adv-btn-primary-sm"
-                                onClick={handleEditClick}
-                                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                                <FaEdit /> {t('profile.editDetails')}
-                            </button>
-                        )}
-                    </div>
-
-                    {!isEditing ? (
-                        <div className="profile-read-view" style={{ display: 'grid', gap: '1.5rem' }}>
-                            <div className="profile-item-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: '#F9FAFB', borderRadius: '12px' }}>
-                                <div style={{ background: '#E8F5E9', padding: '12px', borderRadius: '50%', color: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px' }}><FaUser size={20} /></div>
-                                <div>
-                                    <span style={{ fontSize: '0.85rem', color: '#666', display: 'block' }}>{t('profile.fullName')}</span>
-                                    <span style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{user?.username || 'Not Provided'}</span>
-                                </div>
-                            </div>
-
-                            <div className="profile-item-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: '#F9FAFB', borderRadius: '12px' }}>
-                                <div style={{ background: '#E3F2FD', padding: '12px', borderRadius: '50%', color: '#1565C0', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px' }}><FaPhone size={20} /></div>
-                                <div>
-                                    <span style={{ fontSize: '0.85rem', color: '#666', display: 'block' }}>{t('profile.phoneNumber')}</span>
-                                    <span style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{user?.phone_number || 'Not Provided'}</span>
-                                </div>
-                            </div>
-
-                            <div className="profile-item-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: '#F9FAFB', borderRadius: '12px' }}>
-                                <div style={{ background: '#FFF3E0', padding: '12px', borderRadius: '50%', color: '#EF6C00', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px' }}><FaEnvelope size={20} /></div>
-                                <div>
-                                    <span style={{ fontSize: '0.85rem', color: '#666', display: 'block' }}>{t('profile.email')}</span>
-                                    <span style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{user?.email || 'Not Provided'}</span>
-                                </div>
-                            </div>
-
-                            <div className="profile-item-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: '#F9FAFB', borderRadius: '12px' }}>
-                                <div style={{ background: '#F3E5F5', padding: '12px', borderRadius: '50%', color: '#7B1FA2', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px' }}><FaMapMarkerAlt size={20} /></div>
-                                <div>
-                                    <span style={{ fontSize: '0.85rem', color: '#666', display: 'block' }}>{t('profile.address')}</span>
-                                    <span style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333' }}>{user?.address || 'Not Provided'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <form onSubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} style={{ display: 'grid', gap: '1.5rem' }}>
-                            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontWeight: '500', color: '#444' }}>{t('profile.fullName')}</label>
-                                <input
-                                    type="text"
-                                    name="username"
-                                    value={editData.username}
-                                    onChange={handleChange}
-                                    className="adv-form-input"
-                                    style={{ padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontWeight: '500', color: '#444' }}>{t('profile.phoneNumber')}</label>
-                                <input
-                                    type="tel"
-                                    name="phone_number"
-                                    value={editData.phone_number}
-                                    onChange={handleChange}
-                                    className="adv-form-input"
-                                    style={{ padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
-                                />
-                            </div>
-                            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontWeight: '500', color: '#444' }}>{t('profile.email')}</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={editData.email}
-                                    onChange={handleChange}
-                                    className="adv-form-input"
-                                    style={{ padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <label style={{ fontWeight: '500', color: '#444' }}>{t('profile.address')}</label>
-                                <textarea
-                                    name="address"
-                                    value={editData.address}
-                                    onChange={handleChange}
-                                    className="adv-form-input"
-                                    rows="3"
-                                    style={{ padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
-                                ></textarea>
-                            </div>
-
-                            <div className="form-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                <button
-                                    type="button"
-                                    className="adv-btn-secondary"
-                                    onClick={handleCancelEdit}
-                                    disabled={saving}
-                                    style={{ flex: 1 }}
-                                >
-                                    <FaTimes /> {t('profile.cancel')}
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="adv-btn-primary"
-                                    disabled={saving}
-                                    style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-                                >
-                                    <FaSave /> {saving ? t('profile.saving') : t('profile.save')}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </div>
-
-                {/* 4️⃣ BOTTOM ROW: STATS SUMMARY */}
-                <div className="adv-card" style={{ gridColumn: 'span 12', background: 'linear-gradient(to right, #2E7D32, #1B5E20)', color: 'white' }}>
-                    <div className="adv-card-header" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                        <h3 style={{ color: 'white' }}>{t('profile.journey')}</h3>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '12px', borderRadius: '12px' }}><FaBoxOpen size={24} /></div>
-                            <div>
-                                <span style={{ fontSize: '2rem', fontWeight: 'bold', display: 'block' }}>12</span>
-                                <span style={{ opacity: 0.8 }}>{t('profile.totalOrders')}</span>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '12px', borderRadius: '12px' }}><FaTractor size={24} /></div>
-                            <div>
-                                <span style={{ fontSize: '2rem', fontWeight: 'bold', display: 'block' }}>3</span>
-                                <span style={{ opacity: 0.8 }}>{t('profile.equipmentRents')}</span>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '12px', borderRadius: '12px' }}><FaSeedling size={24} /></div>
-                            <div>
-                                <span style={{ fontSize: '2rem', fontWeight: 'bold', display: 'block' }}>5</span>
-                                <span style={{ opacity: 0.8 }}>{t('profile.activeListings')}</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
 

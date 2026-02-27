@@ -19,7 +19,11 @@ const categories = [
     { value: 'fertilizer', label: 'Fertilizer', icon: <GiFertilizerBag /> },
     { value: 'manure', label: 'Manure', icon: <GiCow /> },
     { value: 'pesticide', label: 'Pesticide', icon: <GiPowder /> },
+    { value: 'plant_food', label: 'Plant Food', icon: <FaLeaf /> },
     { value: 'tools', label: 'Tools', icon: <FaTools /> },
+    { value: 'equipment', label: 'Equipment', icon: <FaTools /> },
+    { value: 'tractor', label: 'Tractor', icon: <FaTools /> },
+    { value: 'other', label: 'Other', icon: <FaLeaf /> },
 ];
 
 const categoryIcon = (cat) => {
@@ -29,6 +33,9 @@ const categoryIcon = (cat) => {
         case 'manure': return <GiCow />;
         case 'pesticide': return <GiPowder />;
         case 'tools': return <FaTools />;
+        case 'plant_food': return <FaLeaf />;
+        case 'tractor': return <FaTools />;
+        case 'equipment': return <FaTools />;
         default: return <FaLeaf />;
     }
 };
@@ -70,7 +77,9 @@ const BuyProducts = () => {
         try {
             setLoading(true);
             const res = await api.get('suppliers/products/');
-            setProducts(Array.isArray(res.data) ? res.data : []);
+            // Handle both paginated { results: [...] } and plain array responses
+            const data = res.data?.results ?? res.data;
+            setProducts(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error(err);
             toast.error('Failed to load marketplace products.');
@@ -83,7 +92,9 @@ const BuyProducts = () => {
         try {
             setOrdersLoading(true);
             const res = await api.get('suppliers/orders/farmer_orders/');
-            setOrders(Array.isArray(res.data) ? res.data : []);
+            // Handle both paginated { results: [...] } and plain array responses
+            const data = res.data?.results ?? res.data;
+            setOrders(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error(err);
             toast.error('Failed to load your orders.');
@@ -301,9 +312,19 @@ const BuyProducts = () => {
 
                                     <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
                                         <h3 style={{ margin: '0 0 6px 0', fontSize: 18, fontWeight: 700, color: '#111827' }}>{product.name}</h3>
-                                        <p style={{ margin: '0 0 12px 0', fontSize: 14, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <p style={{ margin: '0 0 6px 0', fontSize: 14, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 6 }}>
                                             <FaStore size={12} /> {product.supplier_name}
                                         </p>
+                                        {product.supplier_location?.full_address && product.supplier_location.full_address !== 'Location not specified' && (
+                                            <p style={{ margin: '0 0 8px 0', fontSize: 12, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <FaMapMarkerAlt size={10} /> {product.supplier_location.full_address}
+                                            </p>
+                                        )}
+                                        {product.description && (
+                                            <p style={{ margin: '0 0 10px 0', fontSize: 13, color: '#4B5563', lineHeight: 1.5 }}>
+                                                {product.description.length > 80 ? product.description.substring(0, 80) + '...' : product.description}
+                                            </p>
+                                        )}
 
                                         <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div>

@@ -46,7 +46,8 @@ code {
   --primary-green: #2E7D32;
   --primary-green-light: #43A047;
   --primary-green-dark: #1F5E3B;
-  --primary-bg: #F6FBF8;
+  --sidebar-dark: #234E3B;
+  --primary-bg: #F4F8F6;
   --accent-light: #A7F3D0;
   
   /* Neutral Colors */
@@ -60,6 +61,12 @@ code {
   --gray-700: #374151;
   --gray-800: #1F2937;
   --gray-900: #111827;
+  
+  /* Profile Specific */
+  --profile-card-bg: #FFFFFF;
+  --profile-border: #E6EFEA;
+  --profile-text-dark: #1F2937;
+  --profile-muted: #6B7280;
   
   /* Semantic Colors */
   --success: #10B981;

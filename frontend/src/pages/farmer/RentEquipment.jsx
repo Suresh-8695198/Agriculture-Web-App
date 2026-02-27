@@ -70,7 +70,9 @@ const RentEquipment = () => {
         try {
             setLoading(true);
             const res = await api.get('suppliers/equipment/');
-            setEquipment(Array.isArray(res.data) ? res.data : []);
+            // Handle both paginated { results: [...] } and plain array responses
+            const data = res.data?.results ?? res.data;
+            setEquipment(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error(err);
             toast.error('Failed to load available equipment.');
@@ -83,7 +85,9 @@ const RentEquipment = () => {
         try {
             setRentalsLoading(true);
             const res = await api.get('suppliers/rentals/farmer_rentals/');
-            setRentals(Array.isArray(res.data) ? res.data : []);
+            // Handle both paginated { results: [...] } and plain array responses
+            const data = res.data?.results ?? res.data;
+            setRentals(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error(err);
             toast.error('Failed to load your rental history.');

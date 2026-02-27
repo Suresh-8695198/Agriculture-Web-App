@@ -5,9 +5,30 @@ from suppliers.models import Product
 class FarmerProfile(models.Model):
     """Extended profile for farmers"""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='farmer_profile')
+    
+    # 📝 IDENTITY
+    dob = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=20, blank=True)
+    
+    # 🌾 ASSETS
     farm_name = models.CharField(max_length=200, blank=True)
-    farm_size = models.DecimalField(max_digits=10, decimal_places=2, help_text="Size in acres", null=True, blank=True)
-    crops_grown = models.TextField(blank=True, help_text="Comma-separated list of crops")
+    farm_size = models.DecimalField(max_digits=10, decimal_places=2, help_text="Size in acres", null=True, blank=True) # land_area
+    crops_grown = models.TextField(blank=True, help_text="Comma-separated list of crops") # main_crops
+    soil_type = models.CharField(max_length=100, blank=True)
+    irrigation_type = models.CharField(max_length=100, blank=True)
+    
+    # 🏦 FINTECH
+    bank_name = models.CharField(max_length=200, blank=True)
+    upi_id = models.CharField(max_length=100, blank=True)
+    pan_number = models.CharField(max_length=50, blank=True)
+    
+    # ⚙️ SYSTEM CONFIG & SETTINGS (Stored as simple fields or JSON)
+    dark_mode = models.BooleanField(default=False)
+    interface_language = models.CharField(max_length=10, default='en')
+    notif_order = models.BooleanField(default=True)
+    notif_whatsapp = models.BooleanField(default=True)
+    notif_market = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

@@ -26,7 +26,6 @@ const SupplierProducts = () => {
                 </div>
             </div>
         </div>
-        </div >
     );
 };
 
