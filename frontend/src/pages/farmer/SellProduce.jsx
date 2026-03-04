@@ -4,7 +4,9 @@ import {
     FaPlus, FaEdit, FaTrash, FaTimes, FaSave, FaSearch,
     FaFilter, FaBoxOpen, FaClipboardList, FaCheckCircle,
     FaPauseCircle, FaPlayCircle, FaCalendarAlt, FaEyeSlash,
-    FaEye, FaCheckSquare, FaRegSquare, FaLeaf
+    FaEye, FaCheckSquare, FaRegSquare, FaLeaf,
+    FaTractor, FaCarrot, FaAppleAlt, FaCube, FaSeedling,
+    FaSortAmountDown, FaExclamationCircle
 } from 'react-icons/fa';
 import { MdShoppingBasket, MdDashboard, MdTimer, MdOutlineFileUpload } from 'react-icons/md';
 import { toast } from 'react-toastify';
@@ -47,13 +49,13 @@ const EMPTY_FORM = {
 };
 
 const produceTypes = [
-    { value: 'paddy', label: 'Paddy / Rice', icon: '🌾' },
-    { value: 'wheat', label: 'Wheat', icon: '🍞' },
-    { value: 'vegetables', label: 'Vegetables', icon: '🥦' },
-    { value: 'fruits', label: 'Fruits', icon: '🍎' },
-    { value: 'pulses', label: 'Pulses', icon: '🫘' },
-    { value: 'spices', label: 'Spices', icon: '🌶️' },
-    { value: 'other', label: 'Other', icon: '📦' },
+    { value: 'paddy', label: 'Paddy / Rice', icon: <FaSeedling size={32} color="#166534" /> },
+    { value: 'wheat', label: 'Wheat', icon: <FaSeedling size={32} color="#D97706" /> },
+    { value: 'vegetables', label: 'Vegetables', icon: <FaCarrot size={32} color="#EA580C" /> },
+    { value: 'fruits', label: 'Fruits', icon: <FaAppleAlt size={32} color="#DC2626" /> },
+    { value: 'pulses', label: 'Pulses', icon: <FaCube size={32} color="#65A30D" /> },
+    { value: 'spices', label: 'Spices', icon: <FaLeaf size={32} color="#991B1B" /> },
+    { value: 'other', label: 'Other', icon: <FaBoxOpen size={32} color="#4B5563" /> },
 ];
 
 const unitOptions = [
@@ -65,8 +67,10 @@ const unitOptions = [
     { value: 'dozen', label: 'Dozen' },
 ];
 
-const categoryIcon = (cat) =>
-    (produceTypes.find(t => t.value === cat) || { icon: '📦' }).icon;
+const categoryIcon = (cat) => {
+    const found = produceTypes.find(t => t.value === cat);
+    return found ? found.icon : <FaBoxOpen size={32} color="#4B5563" />;
+};
 
 /* ─── component ───────────────────────────────────────────────── */
 const SellProduce = () => {
@@ -79,6 +83,8 @@ const SellProduce = () => {
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [filterCategory, setFilterCategory] = useState('all');
+    const [sortBy, setSortBy] = useState('newest');
     const [selectedIds, setSelectedIds] = useState([]);
     const [selectionMode, setSelectionMode] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null); // {id} or 'bulk'
@@ -149,13 +155,13 @@ const SellProduce = () => {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
                 setListings(prev => prev.map(l => l.id === currentId ? res.data : l));
-                toast.success('✅ Listing updated successfully!');
+                toast.success('Listing updated successfully!');
             } else {
                 const res = await api.post('farmers/produce/', payload, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
                 setListings(prev => [res.data, ...prev]);
-                toast.success('🚀 Crop published to marketplace!');
+                toast.success('Crop published to marketplace!');
             }
             resetForm();
         } catch (err) {
@@ -182,13 +188,13 @@ const SellProduce = () => {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
                 setListings(prev => prev.map(l => l.id === currentId ? res.data : l));
-                toast.success('💾 Draft saved (listing is paused).');
+                toast.success('Draft saved (listing is paused).');
             } else {
                 const res = await api.post('farmers/produce/save-draft/', payload, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
                 setListings(prev => [res.data, ...prev]);
-                toast.success('💾 Saved as draft — not visible to buyers yet.');
+                toast.success('Saved as draft — not visible to buyers yet.');
             }
             resetForm();
         } catch (err) {
@@ -206,7 +212,7 @@ const SellProduce = () => {
             const res = await api.patch(`farmers/produce/${id}/toggle_availability/`);
             const updated = res.data?.data || res.data;
             setListings(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l));
-            const word = updated.is_available ? 'Resumed ▶️' : 'Paused ⏸️';
+            const word = updated.is_available ? 'Resumed' : 'Paused';
             toast.success(`${word} — listing updated.`);
         } catch (err) {
             toast.error('Failed to toggle listing status.');
@@ -220,7 +226,7 @@ const SellProduce = () => {
         try {
             await api.delete(`farmers/produce/${id}/`);
             setListings(prev => prev.filter(l => l.id !== id));
-            toast.success('🗑️ Listing deleted.');
+            toast.success('Listing deleted.');
         } catch {
             toast.error('Failed to delete listing.');
         } finally {
@@ -235,7 +241,7 @@ const SellProduce = () => {
             setListings(prev => prev.filter(l => !selectedIds.includes(l.id)));
             setSelectedIds([]);
             setSelectionMode(false);
-            toast.success(`🗑️ ${selectedIds.length} listing(s) deleted.`);
+            toast.success(`${selectedIds.length} listing(s) deleted.`);
         } catch {
             toast.error('Bulk delete failed.');
         } finally {
@@ -255,7 +261,7 @@ const SellProduce = () => {
         setSelectedIds(allSelected ? [] : visibleIds);
     };
 
-    /* ── filter ── */
+    /* ── filter & sort ── */
     const filtered = listings.filter(l => {
         const matchSearch =
             l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -264,7 +270,13 @@ const SellProduce = () => {
             filterStatus === 'all' ? true :
                 filterStatus === 'active' ? l.is_available :
                     filterStatus === 'draft' ? !l.is_available : true;
-        return matchSearch && matchStatus;
+        const matchCat = filterCategory === 'all' ? true : l.category === filterCategory;
+        return matchSearch && matchStatus && matchCat;
+    }).sort((a, b) => {
+        if (sortBy === 'price_asc') return parseFloat(a.price_per_unit || 0) - parseFloat(b.price_per_unit || 0);
+        if (sortBy === 'price_desc') return parseFloat(b.price_per_unit || 0) - parseFloat(a.price_per_unit || 0);
+        if (sortBy === 'qty_desc') return parseFloat(b.available_quantity || 0) - parseFloat(a.available_quantity || 0);
+        return 0;
     });
 
     /* ── stats ── */
@@ -278,59 +290,68 @@ const SellProduce = () => {
         <div className="adv-dashboard-container" style={{ background: '#F4F8F6', minHeight: '100vh' }}>
 
             {/* ── HEADER ── */}
-            <header className="adv-header" style={{ marginBottom: 24, background: 'transparent', padding: 0, boxShadow: 'none' }}>
-                <div>
-                    <h1 style={{ color: '#111827', fontSize: 28, marginBottom: 4, fontWeight: 800 }}>
-                        🌾 Sell Your Crops
-                    </h1>
-                    <p style={{ color: '#6B7280', fontSize: '1rem', margin: 0 }}>
-                        Manage all your produce listings — publish, pause, edit or delete anytime.
-                    </p>
+            <header className="adv-header" style={{ marginBottom: 36, background: '#fff', padding: '32px 36px', borderRadius: 24, boxShadow: '0 10px 30px rgba(0,0,0,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                    <div style={{ background: '#F0FDF4', padding: 20, borderRadius: 20, color: '#15803D' }}>
+                        <FaTractor size={36} />
+                    </div>
+                    <div>
+                        <h1 style={{ color: '#111827', fontSize: 32, marginBottom: 8, fontWeight: 800, letterSpacing: '-0.5px' }}>
+                            Sell Your Crops
+                        </h1>
+                        <p style={{ color: '#6B7280', fontSize: '1.05rem', margin: 0, fontWeight: 500 }}>
+                            Easily manage all your produce listings in one place.
+                        </p>
+                    </div>
                 </div>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                     {selectionMode ? (
                         <>
-                            <span style={{ color: '#6B7280', fontSize: 14, alignSelf: 'center' }}>
+                            <span style={{ color: '#4B5563', fontSize: 15, alignSelf: 'center', fontWeight: 700, padding: '0 8px' }}>
                                 {selectedIds.length} selected
                             </span>
                             <button
-                                className="adv-btn-secondary"
                                 onClick={toggleSelectAll}
-                                style={{ padding: '10px 16px', fontSize: 14 }}
+                                style={{ padding: '12px 24px', fontSize: 14, borderRadius: 14, fontWeight: 700, background: '#F3F4F6', color: '#374151', border: 'none', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', alignItems: 'center', gap: 8 }}
+                                onMouseEnter={e => e.target.style.background = '#E5E7EB'}
+                                onMouseLeave={e => e.target.style.background = '#F3F4F6'}
                             >
-                                {filtered.every(l => selectedIds.includes(l.id)) ? '☑ Deselect All' : '☐ Select All'}
+                                {filtered.every(l => selectedIds.includes(l.id)) ? <><FaRegSquare size={16} /> Deselect All</> : <><FaCheckSquare size={16} /> Select All</>}
                             </button>
                             <button
-                                className="adv-btn-secondary"
                                 onClick={() => { setSelectionMode(false); setSelectedIds([]); }}
-                                style={{ padding: '10px 16px', fontSize: 14 }}
+                                style={{ padding: '12px 24px', fontSize: 14, borderRadius: 14, fontWeight: 700, background: '#fff', color: '#4B5563', border: '2px solid #E5E7EB', cursor: 'pointer', transition: 'all 0.2s' }}
+                                onMouseEnter={e => { e.target.style.background = '#F9FAFB'; e.target.style.borderColor = '#D1D5DB'; }}
+                                onMouseLeave={e => { e.target.style.background = '#fff'; e.target.style.borderColor = '#E5E7EB'; }}
                             >
                                 Cancel
                             </button>
                             {selectedIds.length > 0 && (
                                 <button
-                                    style={{ padding: '10px 16px', fontSize: 14, background: '#DC2626', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                                    style={{ padding: '12px 24px', fontSize: 14, background: '#DC2626', color: '#fff', border: 'none', borderRadius: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, boxShadow: '0 4px 14px rgba(220, 38, 38, 0.3)' }}
                                     onClick={() => setDeleteConfirm('bulk')}
                                 >
-                                    <FaTrash /> Delete Selected ({selectedIds.length})
+                                    <FaTrash size={15} /> Delete Selected
                                 </button>
                             )}
                         </>
                     ) : (
                         <>
                             <button
-                                className="adv-btn-secondary"
                                 onClick={() => setSelectionMode(true)}
-                                style={{ padding: '10px 16px', fontSize: 14 }}
+                                style={{ padding: '14px 24px', fontSize: 15, borderRadius: 14, fontWeight: 700, background: '#F3F4F6', color: '#111827', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'background 0.2s' }}
+                                onMouseEnter={e => e.target.style.background = '#E5E7EB'}
+                                onMouseLeave={e => e.target.style.background = '#F3F4F6'}
                             >
-                                <FaCheckSquare /> Select Multiple
+                                <FaCheckSquare size={18} color="#6B7280" /> Select Multiple
                             </button>
                             <button
-                                className="adv-btn-primary"
                                 onClick={() => { resetForm(); setShowForm(true); }}
-                                style={{ padding: '10px 20px', fontSize: 15 }}
+                                style={{ padding: '14px 28px', fontSize: 15, borderRadius: 14, fontWeight: 800, background: '#15803D', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 20px rgba(21, 128, 61, 0.3)', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                                onMouseEnter={e => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 12px 24px rgba(21, 128, 61, 0.4)'; }}
+                                onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 8px 20px rgba(21, 128, 61, 0.3)'; }}
                             >
-                                <FaPlus /> Add New Crop
+                                <FaPlus size={16} /> Add New Crop
                             </button>
                         </>
                     )}
@@ -338,72 +359,106 @@ const SellProduce = () => {
             </header>
 
             {/* ── STATS ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24, marginBottom: 36 }}>
                 {[
-                    { icon: <FaClipboardList size={22} />, num: totalListings, label: 'Total Listings', bg: '#E8F5E9', color: '#2E7D32' },
-                    { icon: <FaCheckCircle size={22} />, num: activeListings, label: 'Active', bg: '#DCFCE7', color: '#166534' },
-                    { icon: <FaEyeSlash size={22} />, num: draftListings, label: 'Drafts / Paused', bg: '#FEF3C7', color: '#D97706' },
-                    { icon: <MdShoppingBasket size={22} />, num: soldOut, label: 'Sold Out', bg: '#FEE2E2', color: '#DC2626' },
-                ].map(({ icon, num, label, bg, color }) => (
-                    <div key={label} style={{ background: '#fff', padding: '18px 20px', borderRadius: 12, border: '1px solid #E6EFEA', display: 'flex', alignItems: 'center', gap: 14 }}>
-                        <div style={{ background: bg, padding: 10, borderRadius: '50%', color }}>{icon}</div>
+                    { icon: <FaClipboardList size={26} />, num: totalListings, label: 'Total Listings', bg: '#F9FAFB', color: '#111827', accent: '#374151' },
+                    { icon: <FaCheckCircle size={26} />, num: activeListings, label: 'Active', bg: '#F0FDF4', color: '#166534', accent: '#15803D' },
+                    { icon: <FaPauseCircle size={26} />, num: draftListings, label: 'Paused', bg: '#FFFBEB', color: '#B45309', accent: '#D97706' },
+                    { icon: <FaBoxOpen size={26} />, num: soldOut, label: 'Sold Out', bg: '#FEF2F2', color: '#991B1B', accent: '#DC2626' },
+                ].map(({ icon, num, label, bg, color, accent }) => (
+                    <div key={label} style={{ background: '#fff', padding: '28px', borderRadius: 24, border: 'none', display: 'flex', alignItems: 'center', gap: 20, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)' }}>
+                        <div style={{ background: bg, width: 68, height: 68, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: accent }}>
+                            {icon}
+                        </div>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: 22, color: '#1F2937' }}>{num}</h3>
-                            <span style={{ fontSize: 13, color: '#6B7280' }}>{label}</span>
+                            <span style={{ fontSize: 13, color: '#6B7280', fontWeight: 600, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</span>
+                            <h3 style={{ margin: 0, fontSize: 32, color: color, fontWeight: 800, lineHeight: 1 }}>{num}</h3>
                         </div>
                     </div>
                 ))}
             </div>
 
             {/* ── SEARCH + FILTER BAR ── */}
-            <div style={{ background: '#fff', padding: '14px 20px', borderRadius: 12, marginBottom: 24, border: '1px solid #E6EFEA', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-                <div style={{ flex: 1, minWidth: 220, position: 'relative' }}>
-                    <FaSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
-                    <input
-                        type="text"
-                        placeholder="Search by name or category..."
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        style={{ width: '100%', padding: '9px 9px 9px 36px', borderRadius: 8, border: '1px solid #D1D5DB', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                    />
+            <div style={{ background: '#fff', padding: '24px 32px', borderRadius: 24, marginBottom: 36, border: 'none', display: 'flex', flexDirection: 'column', gap: 24, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)' }}>
+                {/* Search Row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                        <FaSearch style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', fontSize: 18 }} />
+                        <input
+                            type="text"
+                            placeholder="Search your crops..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', padding: '16px 16px 16px 52px', borderRadius: 16, border: '2px solid #F3F4F6', fontSize: 16, outline: 'none', boxSizing: 'border-box', background: '#F9FAFB', fontWeight: 500, transition: 'border-color 0.2s' }}
+                            onFocus={(e) => e.target.style.borderColor = '#2E7D32'}
+                            onBlur={(e) => e.target.style.borderColor = '#F3F4F6'}
+                        />
+                    </div>
                 </div>
-                <select
-                    value={filterStatus}
-                    onChange={e => setFilterStatus(e.target.value)}
-                    style={{ padding: '9px 14px', borderRadius: 8, border: '1px solid #D1D5DB', background: '#fff', cursor: 'pointer', color: '#374151', fontSize: 14 }}
-                >
-                    <option value="all">All Status</option>
-                    <option value="active">Active Only</option>
-                    <option value="draft">Drafts / Paused</option>
-                </select>
-                <span style={{ fontSize: 13, color: '#9CA3AF' }}>{filtered.length} result(s)</span>
+                {/* Filters Row */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, borderTop: '2px solid #F9FAFB', paddingTop: 24, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <FaFilter color="#9CA3AF" size={16} />
+                        <span style={{ fontSize: 15, fontWeight: 700, color: '#374151' }}>Filter:</span>
+                    </div>
+                    <select
+                        value={filterCategory}
+                        onChange={e => setFilterCategory(e.target.value)}
+                        style={{ padding: '12px 20px', borderRadius: 12, border: '1px solid #E5E7EB', background: '#fff', cursor: 'pointer', color: '#111827', fontSize: 15, fontWeight: 600, outline: 'none' }}
+                    >
+                        <option value="all">All Categories</option>
+                        {produceTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                    <select
+                        value={filterStatus}
+                        onChange={e => setFilterStatus(e.target.value)}
+                        style={{ padding: '12px 20px', borderRadius: 12, border: '1px solid #E5E7EB', background: '#fff', cursor: 'pointer', color: '#111827', fontSize: 15, fontWeight: 600, outline: 'none' }}
+                    >
+                        <option value="all">All Statuses</option>
+                        <option value="active">Active Listings</option>
+                        <option value="draft">Paused</option>
+                    </select>
+                    <select
+                        value={sortBy}
+                        onChange={e => setSortBy(e.target.value)}
+                        style={{ padding: '12px 20px', borderRadius: 12, border: '1px solid #E5E7EB', background: '#fff', cursor: 'pointer', color: '#111827', fontSize: 15, fontWeight: 600, outline: 'none' }}
+                    >
+                        <option value="newest">Sort: Newest</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="qty_desc">Quantity: High</option>
+                    </select>
+                    <span style={{ marginLeft: 'auto', fontSize: 14, color: '#2E7D32', fontWeight: 800, background: '#DCFCE7', padding: '10px 20px', borderRadius: 12 }}>
+                        {filtered.length} Found
+                    </span>
+                </div>
             </div>
 
             {/* ── LISTINGS ── */}
             {loading ? (
-                <div style={{ textAlign: 'center', padding: 60, color: '#6B7280', fontSize: 16 }}>
-                    <div style={{ fontSize: 40, marginBottom: 12 }}>⏳</div>
-                    Loading your listings...
+                <div style={{ textAlign: 'center', padding: 80, color: '#6B7280', fontSize: 18, background: '#fff', borderRadius: 20, border: '1px solid #E6EFEA' }}>
+                    <MdTimer style={{ fontSize: 64, color: '#10B981', marginBottom: 16, animation: 'pulse 2s infinite' }} />
+                    <div style={{ fontWeight: 600 }}>Loading your listings...</div>
                 </div>
             ) : filtered.length === 0 ? (
-                <div style={{ background: '#fff', padding: '60px 20px', borderRadius: 16, border: '2px dashed #D1D5DB', textAlign: 'center' }}>
-                    <div style={{ fontSize: 56, marginBottom: 16 }}>🌱</div>
-                    <h3 style={{ fontSize: 20, fontWeight: 700, color: '#1F2937', marginBottom: 8 }}>
+                <div style={{ background: '#fff', padding: '80px 20px', borderRadius: 20, border: '2px dashed #D1D5DB', textAlign: 'center' }}>
+                    <FaSeedling style={{ fontSize: 72, color: '#10B981', marginBottom: 20 }} />
+                    <h3 style={{ fontSize: 24, fontWeight: 800, color: '#1F2937', marginBottom: 16 }}>
                         {searchTerm || filterStatus !== 'all' ? 'No matching listings' : 'No crops listed yet'}
                     </h3>
-                    <p style={{ color: '#6B7280', marginBottom: 24 }}>
+                    <p style={{ color: '#6B7280', marginBottom: 28, fontSize: 16 }}>
                         {searchTerm || filterStatus !== 'all'
                             ? 'Try adjusting your search or filter.'
                             : 'Add your first crop and start selling to buyers across the marketplace.'}
                     </p>
                     {!searchTerm && filterStatus === 'all' && (
-                        <button className="adv-btn-primary" onClick={() => setShowForm(true)} style={{ padding: '12px 24px', fontSize: 15 }}>
+                        <button className="adv-btn-primary" onClick={() => setShowForm(true)} style={{ padding: '14px 28px', fontSize: 16, fontWeight: 700 }}>
                             <FaPlus /> Add First Crop
                         </button>
                     )}
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24 }}>
                     {filtered.map(item => {
                         const isSelected = selectedIds.includes(item.id);
                         const isToggling = togglingId === item.id;
@@ -412,117 +467,128 @@ const SellProduce = () => {
                                 key={item.id}
                                 style={{
                                     background: '#fff',
-                                    padding: 20,
-                                    borderRadius: 16,
-                                    border: isSelected ? '2px solid #2E7D32' : '1px solid #E6EFEA',
-                                    transition: 'all 0.2s',
+                                    padding: 24,
+                                    borderRadius: 24,
+                                    border: isSelected ? '2px solid #2E7D32' : 'none',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                     position: 'relative',
                                     opacity: item.is_available ? 1 : 0.82,
+                                    boxShadow: isSelected ? '0 10px 25px -5px rgba(46, 125, 50, 0.25)' : '0 10px 30px rgba(0, 0, 0, 0.04)',
+                                    display: 'flex',
+                                    flexDirection: 'column'
                                 }}
                             >
                                 {/* selection checkbox */}
                                 {selectionMode && (
                                     <button
                                         onClick={() => toggleSelect(item.id)}
-                                        style={{ position: 'absolute', top: 12, left: 12, background: 'none', border: 'none', cursor: 'pointer', color: isSelected ? '#2E7D32' : '#9CA3AF', fontSize: 20, padding: 0, zIndex: 2 }}
+                                        style={{ position: 'absolute', top: 16, left: 16, background: 'none', border: 'none', cursor: 'pointer', color: isSelected ? '#2E7D32' : '#9CA3AF', fontSize: 24, padding: 0, zIndex: 2 }}
                                     >
                                         {isSelected ? <FaCheckSquare /> : <FaRegSquare />}
                                     </button>
                                 )}
 
                                 {/* header row */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-                                    <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', paddingLeft: selectionMode ? 28 : 0 }}>
-                                        <span style={{ fontSize: '3rem', lineHeight: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+                                    <div style={{ display: 'flex', gap: 16, alignItems: 'center', paddingLeft: selectionMode ? 28 : 0 }}>
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                                             {item.image
-                                                ? <img src={item.image} alt={item.name} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover' }} />
-                                                : categoryIcon(item.category)
+                                                ? <img src={item.image} alt={item.name} style={{ width: 68, height: 68, borderRadius: 16, objectFit: 'cover' }} />
+                                                : <span style={{ width: 68, height: 68, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9FAFB', borderRadius: 16, color: '#6B7280' }}>
+                                                    {categoryIcon(item.category)}
+                                                </span>
                                             }
                                         </span>
                                         <div>
-                                            <h3 style={{ margin: '0 0 4px 0', fontSize: 17, color: '#111827', fontWeight: 700 }}>{item.name}</h3>
-                                            <span style={{ fontSize: 12, color: '#6B7280', background: '#F3F4F6', padding: '3px 8px', borderRadius: 4 }}>{item.category}</span>
-                                            {item.is_organic && (
-                                                <span style={{ marginLeft: 6, fontSize: 12, color: '#166534', background: '#DCFCE7', padding: '3px 8px', borderRadius: 4 }}>
-                                                    🌿 Organic
-                                                </span>
-                                            )}
+                                            <h3 style={{ margin: '0 0 6px 0', fontSize: 18, color: '#111827', fontWeight: 800, letterSpacing: '-0.3px' }}>{item.name}</h3>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                                <span style={{ fontSize: 13, color: '#4B5563', background: '#F3F4F6', padding: '4px 10px', borderRadius: 8, fontWeight: 600 }}>{item.category}</span>
+                                                {item.is_organic && (
+                                                    <span style={{ fontSize: 13, color: '#15803D', background: '#DCFCE7', padding: '4px 10px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                                                        <FaLeaf /> Organic
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     <span style={{
                                         height: 'fit-content',
-                                        fontSize: 12,
+                                        fontSize: 13,
                                         fontWeight: 700,
-                                        padding: '4px 10px',
-                                        borderRadius: 20,
-                                        background: item.is_available ? '#DCFCE7' : '#FEF3C7',
-                                        color: item.is_available ? '#166534' : '#D97706',
+                                        padding: '6px 12px',
+                                        borderRadius: 12,
+                                        background: item.is_available ? '#F0FDF4' : '#F3F4F6',
+                                        color: item.is_available ? '#15803D' : '#4B5563',
+                                        display: 'flex', alignItems: 'center', gap: 6
                                     }}>
-                                        {item.is_available ? '● Active' : '⏸ Draft'}
+                                        {item.is_available ? <><FaCheckCircle size={14} /> Active</> : <><FaPauseCircle size={14} /> Paused</>}
                                     </span>
                                 </div>
 
                                 {/* details */}
-                                <div style={{ display: 'grid', gap: 10, borderTop: '1px solid #F3F4F6', paddingTop: 14 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                                        <span style={{ color: '#6B7280', display: 'flex', alignItems: 'center', gap: 6 }}><FaBoxOpen size={13} /> Available</span>
-                                        <strong style={{ color: '#111827' }}>{item.available_quantity} {item.unit}</strong>
+                                <div style={{ display: 'grid', gap: 14, borderTop: '2px solid #F9FAFB', paddingTop: 20, flexGrow: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15 }}>
+                                        <span style={{ color: '#6B7280', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}><FaBoxOpen size={16} color="#9CA3AF" /> Stock</span>
+                                        <strong style={{ color: '#111827' }}>{item.available_quantity} <span style={{ color: '#6B7280', fontWeight: 500 }}>{item.unit}</span></strong>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                                        <span style={{ color: '#6B7280', display: 'flex', alignItems: 'center', gap: 6 }}><MdDashboard size={13} /> Price</span>
-                                        <strong style={{ color: '#166534', fontSize: 15 }}>₹{item.price_per_unit}/{item.unit}</strong>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, alignItems: 'center' }}>
+                                        <span style={{ color: '#6B7280', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}><MdDashboard size={18} color="#9CA3AF" /> Price</span>
+                                        <strong style={{ color: '#15803D', fontSize: 18, background: '#F0FDF4', padding: '6px 12px', borderRadius: 8 }}>₹{item.price_per_unit}<span style={{ fontSize: 14, color: '#166534', fontWeight: 500 }}>/{item.unit}</span></strong>
                                     </div>
                                     {item.harvest_date && (
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                                            <span style={{ color: '#6B7280', display: 'flex', alignItems: 'center', gap: 6 }}><FaCalendarAlt size={13} /> Harvest</span>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15 }}>
+                                            <span style={{ color: '#6B7280', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}><FaCalendarAlt size={16} color="#9CA3AF" /> Harvest</span>
                                             <strong style={{ color: '#111827' }}>{item.harvest_date}</strong>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* action buttons */}
-                                <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                                <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                                     {/* Edit */}
                                     <button
-                                        className="adv-btn-secondary"
                                         onClick={() => openEdit(item)}
                                         disabled={selectionMode}
                                         title="Edit listing"
-                                        style={{ padding: '8px 6px', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                                        style={{ padding: '12px', fontSize: 14, color: '#374151', backgroundColor: '#F9FAFB', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, fontWeight: 700, cursor: selectionMode ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                                        onMouseEnter={(e) => { e.target.style.background = '#E5E7EB'; }}
+                                        onMouseLeave={(e) => { e.target.style.background = '#F9FAFB'; }}
                                     >
-                                        <FaEdit /> Edit
+                                        <FaEdit size={16} color="#4B5563" /> Edit
                                     </button>
 
                                     {/* Pause / Resume */}
                                     <button
-                                        className="adv-btn-secondary"
                                         onClick={() => handleToggle(item.id)}
                                         disabled={isToggling || selectionMode}
                                         title={item.is_available ? 'Pause (hide from buyers)' : 'Resume (make visible)'}
                                         style={{
-                                            padding: '8px 6px', fontSize: 13,
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                                            color: item.is_available ? '#D97706' : '#166534',
-                                            borderColor: item.is_available ? '#FDE68A' : '#BBF7D0',
+                                            padding: '12px', fontSize: 14, cursor: isToggling || selectionMode ? 'not-allowed' : 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, fontWeight: 700, transition: 'all 0.2s', border: 'none',
+                                            color: item.is_available ? '#92400E' : '#15803D',
+                                            backgroundColor: item.is_available ? '#FEF3C7' : '#DCFCE7'
                                         }}
+                                        onMouseEnter={(e) => { e.target.style.opacity = 0.8; }}
+                                        onMouseLeave={(e) => { e.target.style.opacity = 1; }}
                                     >
                                         {isToggling
                                             ? '...'
                                             : item.is_available
-                                                ? <><FaPauseCircle /> Pause</>
-                                                : <><FaPlayCircle /> Resume</>
+                                                ? <><FaPauseCircle size={16} /> Pause</>
+                                                : <><FaPlayCircle size={16} /> Resume</>
                                         }
                                     </button>
 
                                     {/* Delete */}
                                     <button
-                                        className="adv-btn-secondary"
                                         onClick={() => setDeleteConfirm(item.id)}
                                         disabled={selectionMode}
                                         title="Delete listing"
-                                        style={{ padding: '8px 6px', fontSize: 13, color: '#DC2626', borderColor: '#FECACA', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                                        style={{ padding: '12px', fontSize: 14, color: '#991B1B', backgroundColor: '#FEE2E2', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, fontWeight: 700, cursor: selectionMode ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                                        onMouseEnter={(e) => { e.target.style.background = '#FECACA'; }}
+                                        onMouseLeave={(e) => { e.target.style.background = '#FEE2E2'; }}
                                     >
-                                        <FaTrash /> Delete
+                                        <FaTrash size={16} color="#DC2626" /> Delete
                                     </button>
                                 </div>
                             </div>
@@ -537,14 +603,19 @@ const SellProduce = () => {
                     <div className="modal-content adv-card" style={{ padding: 0, marginBottom: 40, maxWidth: 740, width: '100%' }}>
 
                         {/* Modal header */}
-                        <div style={{ padding: '22px 28px', background: '#fff', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-                            <div>
-                                <h2 style={{ fontSize: 20, margin: 0, color: '#111827', fontWeight: 800 }}>
-                                    {isEditing ? '✏️ Edit Crop Listing' : '🌾 Add New Crop'}
-                                </h2>
-                                <p style={{ margin: '4px 0 0', color: '#6B7280', fontSize: 13 }}>
-                                    {isEditing ? 'Update the details below and publish or save as draft.' : 'Fill in the details to list your produce on the marketplace.'}
-                                </p>
+                        <div style={{ padding: '22px 28px', background: '#fff', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, borderRadius: '16px 16px 0 0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                <div style={{ background: '#DCFCE7', padding: 10, borderRadius: 12, color: '#166534' }}>
+                                    {isEditing ? <FaEdit size={24} /> : <FaSeedling size={24} />}
+                                </div>
+                                <div>
+                                    <h2 style={{ fontSize: 22, margin: 0, color: '#111827', fontWeight: 800 }}>
+                                        {isEditing ? 'Edit Crop Listing' : 'Add New Crop'}
+                                    </h2>
+                                    <p style={{ margin: '4px 0 0', color: '#6B7280', fontSize: 13 }}>
+                                        {isEditing ? 'Update the details below and publish or save as draft.' : 'Fill in the details to list your produce on the marketplace.'}
+                                    </p>
+                                </div>
                             </div>
                             <button className="close-btn" onClick={resetForm}><FaTimes size={18} /></button>
                         </div>
@@ -568,7 +639,7 @@ const SellProduce = () => {
                                         <select name="category" className="adv-form-input" value={formData.category} onChange={handleInput} required>
                                             <option value="">Select Category</option>
                                             {produceTypes.map(t => (
-                                                <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
+                                                <option key={t.value} value={t.value}>{t.label}</option>
                                             ))}
                                         </select>
                                     </div>
@@ -638,9 +709,9 @@ const SellProduce = () => {
                                             onChange={e => setFormData(prev => ({ ...prev, image: e.target.files[0] || null }))}
                                         />
                                         {formData.image instanceof File && (
-                                            <p style={{ fontSize: 12, color: '#6B7280', marginTop: 4 }}>
-                                                📷 Selected: {formData.image.name}
-                                            </p>
+                                            <div style={{ fontSize: 13, color: '#166534', marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, background: '#DCFCE7', padding: '8px 12px', borderRadius: 8, fontWeight: 600 }}>
+                                                <MdOutlineFileUpload size={18} /> Selected: {formData.image.name}
+                                            </div>
                                         )}
                                     </div>
                                     <div className="form-group full-width">
@@ -715,9 +786,11 @@ const SellProduce = () => {
             {/* ══════════════════ DELETE CONFIRMATION MODAL ══════════════════ */}
             {deleteConfirm && (
                 <div className="modal-overlay" style={{ zIndex: 2000 }}>
-                    <div style={{ background: '#fff', borderRadius: 16, padding: '32px 28px', maxWidth: 420, width: '90%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-                        <div style={{ fontSize: 48, marginBottom: 12 }}>🗑️</div>
-                        <h3 style={{ fontSize: 20, fontWeight: 800, color: '#111827', marginBottom: 8 }}>
+                    <div style={{ background: '#fff', borderRadius: 24, padding: '40px 32px', maxWidth: 460, width: '90%', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+                        <div style={{ background: '#FEE2E2', padding: 24, borderRadius: '50%', color: '#DC2626', display: 'inline-flex', marginBottom: 20 }}>
+                            <FaTrash size={48} />
+                        </div>
+                        <h3 style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 12 }}>
                             {deleteConfirm === 'bulk'
                                 ? `Delete ${selectedIds.length} listing(s)?`
                                 : 'Delete this listing?'}

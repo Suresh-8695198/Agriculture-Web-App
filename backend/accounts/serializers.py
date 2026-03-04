@@ -22,9 +22,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_has_farmer_profile(self, obj):
         return hasattr(obj, 'farmer_profile')
-
+    def get_has_supplier_profile(self, obj):
         return hasattr(obj, 'supplier_profile')
-        
+
     def get_has_consumer_profile(self, obj):
         return hasattr(obj, 'consumer_profile')
 
