@@ -371,8 +371,8 @@ const RentEquipment = () => {
             {/* ── BOOKING MODAL ── */}
             {showBooking && selectedItem && (
                 <div className="modal-overlay">
-                    <div className="modal-content adv-card" style={{ maxWidth: 600, width: '95%', padding: 0 }}>
-                        <div style={{ padding: '24px 28px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="modal-content adv-card" style={{ maxWidth: 600, width: '95%', padding: 0, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ padding: '24px 28px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                             <div>
                                 <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>Request Rental</h2>
                                 <p style={{ margin: '4px 0 0', color: '#6B7280', fontSize: 13 }}>Book "{selectedItem.name}" for your farm.</p>
@@ -380,7 +380,7 @@ const RentEquipment = () => {
                             <button onClick={() => setShowBooking(false)} className="close-btn"><FaTimes /></button>
                         </div>
 
-                        <form onSubmit={handleBookingSubmit} style={{ padding: '24px 28px' }}>
+                        <form onSubmit={handleBookingSubmit} style={{ padding: '24px 28px', overflowY: 'auto', flex: 1 }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
                                 <div className="form-group">
                                     <label style={{ fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>

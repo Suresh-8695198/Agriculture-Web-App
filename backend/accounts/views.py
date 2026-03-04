@@ -109,7 +109,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         user = self.get_object()
-        data = request.data
+        data = request.data.copy()
         
         # Also handle farmer_profile updates if applicable
         if hasattr(user, 'farmer_profile'):
@@ -119,12 +119,24 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
                 'bank_name', 'upi_id', 'pan_number', 'dark_mode', 'interface_language',
                 'notif_order', 'notif_whatsapp', 'notif_market'
             ]
+            # Fields that allow NULL in database
+            nullable_fields = ['dob', 'farm_size']
+            
             for field in farmer_fields:
                 if field in data:
-                    # Boolean fixes from string true/false
                     val = data[field]
-                    if val in ['true', 'True']: val = True
-                    elif val in ['false', 'False']: val = False
+                    
+                    # Handle boolean conversions
+                    if val in ['true', 'True']:
+                        val = True
+                    elif val in ['false', 'False']:
+                        val = False
+                    # Convert empty strings to None only for nullable fields
+                    elif val == '' and field in nullable_fields:
+                        val = None
+                    # For non-nullable CharField/TextField, keep empty string as is
+                    # (don't convert to None as it would violate NOT NULL constraint)
+                    
                     setattr(profile, field, val)
             profile.save()
             

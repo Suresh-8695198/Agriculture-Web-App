@@ -725,10 +725,10 @@ class RentalViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Equipment not found or currently unavailable for rent.'}, status=status.HTTP_404_NOT_FOUND)
 
         # Basic duration calculation (days)
-        from datetime import datetime
+        from datetime import datetime, date
         try:
-            d1 = datetime.strptime(start_date, '%Y-%m-%d')
-            d2 = datetime.strptime(end_date, '%Y-%m-%d')
+            d1 = datetime.strptime(start_date, '%Y-%m-%d').date()
+            d2 = datetime.strptime(end_date, '%Y-%m-%d').date()
             duration_days = (d2 - d1).days + 1
             if duration_days <= 0:
                 raise ValueError
@@ -745,8 +745,8 @@ class RentalViewSet(viewsets.ModelViewSet):
             supplier=equipment.supplier,
             customer=request.user,
             equipment=equipment,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=d1,
+            end_date=d2,
             daily_rate=equipment.daily_rate,
             total_rental_cost=rental_cost,
             security_deposit=equipment.security_deposit,
